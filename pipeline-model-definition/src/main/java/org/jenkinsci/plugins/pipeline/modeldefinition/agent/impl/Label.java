@@ -26,6 +26,8 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AutoCompletionCandidates;
+import hudson.model.labels.LabelExpression;
 import hudson.util.FormValidation;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
@@ -71,12 +73,15 @@ public class Label extends DeclarativeAgent<Label> {
             return "Run on an agent matching a label";
         }
 
+        public AutoCompletionCandidates doAutoCompleteLabel(@QueryParameter String value) {
+            return LabelExpression.autoComplete(value);
+        }
+
         public FormValidation doCheckLabel(@QueryParameter String label) {
-            if (StringUtils.isEmpty(Util.fixEmptyAndTrim(label))) {
+            if (Util.fixEmptyAndTrim(label) == null) {
                 return FormValidation.error("Label is required.");
-            } else {
-                return FormValidation.ok();
             }
+            return LabelExpression.validate(label);
         }
     }
 }
