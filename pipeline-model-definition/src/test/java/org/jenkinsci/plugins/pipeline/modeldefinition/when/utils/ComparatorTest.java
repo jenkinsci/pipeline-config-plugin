@@ -52,5 +52,6 @@ public class ComparatorTest {
     assertFalse(comparator.compare("foo", null));
     assertFalse(comparator.compare("foo", ""));
     assertTrue(comparator.compare("foo", "foo"));
+    assertTrue(comparator.compare("foo", "FoO", false));
   }
 }

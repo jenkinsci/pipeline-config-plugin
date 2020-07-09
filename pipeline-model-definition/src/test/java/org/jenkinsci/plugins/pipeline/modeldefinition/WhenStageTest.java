@@ -692,8 +692,9 @@ public class WhenStageTest extends AbstractModelDefTest {
     @Test
     public void whenEnv() throws Exception {
         expect("when/whenEnv")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World", "Ignore case worked")
-                .logNotContains("Should never be reached")
+                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World",
+                              "Ignore case worked", "Regexp case worked", "Glob with ignore case worked")
+                .logNotContains("Should never be reached", "Glob should never be reached")
                 .go();
     }
 

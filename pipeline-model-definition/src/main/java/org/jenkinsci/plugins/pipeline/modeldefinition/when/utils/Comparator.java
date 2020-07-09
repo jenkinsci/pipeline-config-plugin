@@ -79,12 +79,16 @@ public enum Comparator {
     EQUALS(Messages._Comparator_EQUALS_DisplayName()) {
         @Override
         public boolean compare(@Nonnull String pattern, String actual) {
-            actual = defaultIfBlank(actual, "");
-            return actual.equals(pattern);
+            return compare(pattern, actual, true);
         }
         @Override
         public boolean compare(@Nonnull String pattern, String actual, boolean caseSensitive) {
-            return compare(pattern, actual);
+            actual = defaultIfBlank(actual, "");
+            if (caseSensitive) {
+                return actual.equals(pattern);
+            } else {
+                return actual.equalsIgnoreCase(pattern);
+            }
         }
     };
 

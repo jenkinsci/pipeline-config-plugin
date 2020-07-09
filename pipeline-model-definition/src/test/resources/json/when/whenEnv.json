@@ -127,6 +127,139 @@
           }
         ]
       }]}
+    },
+    {
+      "name": "Five",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Regexp case worked"
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "environment",
+        "arguments":         [
+          {
+            "key": "name",
+            "value":             {
+              "isLiteral": true,
+              "value": "FOO"
+            }
+          },
+          {
+            "key": "value",
+            "value":             {
+              "isLiteral": true,
+              "value": "(?i).*bar"
+            }
+          },
+          {
+            "key": "comparator",
+            "value":             {
+              "isLiteral": true,
+              "value": "G"
+            }
+          }
+        ]
+      }]}
+    },
+    {
+      "name": "Six",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Glob should never be reached"
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "environment",
+        "arguments":         [
+          {
+            "key": "name",
+            "value":             {
+              "isLiteral": true,
+              "value": "FOO"
+            }
+          },
+          {
+            "key": "value",
+            "value":             {
+              "isLiteral": true,
+              "value": "*ar"
+            }
+          },
+          {
+            "key": "comparator",
+            "value":             {
+              "isLiteral": true,
+              "value": "GLOB"
+            }
+          }
+        ]
+      }]}
+    },
+    {
+      "name": "Seven",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "Glob with ignore case worked"
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "environment",
+        "arguments":         [
+          {
+            "key": "name",
+            "value":             {
+              "isLiteral": true,
+              "value": "FOO"
+            }
+          },
+          {
+            "key": "value",
+            "value":             {
+              "isLiteral": true,
+              "value": "*ar"
+            }
+          },
+          {
+            "key": "ignoreCase",
+            "value":             {
+              "isLiteral": true,
+              "value": "true"
+            }
+          },
+          {
+            "key": "comparator",
+            "value":             {
+              "isLiteral": true,
+              "value": "GLOB"
+            }
+          }
+        ]
+      }]}
     }
   ],
   "environment": [  {

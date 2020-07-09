@@ -31,6 +31,11 @@
     <f:entry field="value" title="Expected value for environment variable">
         <f:textbox/>
     </f:entry>
+    <f:advanced>
+        <f:entry field="comparator" title="Comparator">
+            <f:select/>
+        </f:entry>
+    </f:advanced>
     <f:entry field="ignoreCase">
         <f:checkbox title="Ignore case when comparing" checked="false"/>
     </f:entry>

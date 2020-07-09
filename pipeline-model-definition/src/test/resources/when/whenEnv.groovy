@@ -43,7 +43,6 @@ pipeline {
                     echo "World"
                     echo "Heal it"
                 }
-
             }
         }
         stage("Three") {
@@ -62,6 +61,29 @@ pipeline {
                 echo "Ignore case worked"
             }
         }
-
+        stage("Five") {
+            when {
+                environment name: "FOO", value: "(?i).*bar", comparator: 'REGEXP'
+            }
+            steps {
+                echo "Regexp case worked"
+            }
+        }
+        stage("Six") {
+            when {
+                environment name: "FOO", value: "*ar", comparator: 'GLOB'
+            }
+            steps {
+                echo "Glob should never be reached"
+            }
+        }
+        stage("Seven") {
+            when {
+                environment name: "FOO", value: "*ar", comparator: 'GLOB', ignoreCase: true
+            }
+            steps {
+                echo "Glob with ignore case worked"
+            }
+        }
     }
 }
