@@ -24,7 +24,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.List;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
@@ -33,36 +36,32 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.List;
-
-/**
- * Match any of a list of stage conditions
- */
+/** Match any of a list of stage conditions */
 public class AnyOfConditional extends AbstractConditionalWithChildren<AnyOfConditional> {
-    @DataBoundConstructor
-    public AnyOfConditional(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
-        super(children);
+  @DataBoundConstructor
+  public AnyOfConditional(
+      List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
+    super(children);
+  }
+
+  @Extension
+  @Symbol("anyOf")
+  public static class DescriptorImpl
+      extends DeclarativeStageConditionalDescriptor<AnyOfConditional> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Execute the stage if any of the nested conditions are true";
     }
 
-    @Extension
-    @Symbol("anyOf")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<AnyOfConditional> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Execute the stage if any of the nested conditions are true";
-        }
-
-        @Override
-        public int getAllowedChildrenCount() {
-            return -1;
-        }
-
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
-        }
+    @Override
+    public int getAllowedChildrenCount() {
+      return -1;
     }
+
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      return ASTParserUtils.transformWhenContentToRuntimeAST(original);
+    }
+  }
 }

@@ -23,6 +23,7 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
@@ -31,8 +32,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 import org.jenkinsci.plugins.workflow.cps.GlobalVariable;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 /**
  * Loads the main "pipeline" step as well as the additional CPS-transformed code it depends on.
  *
@@ -40,36 +39,35 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  */
 @Extension
 public class ModelStepLoader extends GlobalVariable {
-    public static final String STEP_NAME = "pipeline";
+  public static final String STEP_NAME = "pipeline";
 
-    @Override
-    @NonNull
-    public String getName() {
-        return STEP_NAME;
-    }
+  @Override
+  @NonNull
+  public String getName() {
+    return STEP_NAME;
+  }
 
-    @Override
-    @NonNull
-    public Object getValue(@NonNull CpsScript script) throws Exception {
-        CpsThread c = CpsThread.current();
-        if (c == null)
-            throw new IllegalStateException("Expected to be called from CpsThread");
+  @Override
+  @NonNull
+  public Object getValue(@NonNull CpsScript script) throws Exception {
+    CpsThread c = CpsThread.current();
+    if (c == null) throw new IllegalStateException("Expected to be called from CpsThread");
 
-        return script.getClass()
-                .getClassLoader()
-                .loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ModelInterpreter")
-                .getConstructor(CpsScript.class)
-                .newInstance(script);
-    }
+    return script
+        .getClass()
+        .getClassLoader()
+        .loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.ModelInterpreter")
+        .getConstructor(CpsScript.class)
+        .newInstance(script);
+  }
 
-    /**
-     * Make sure we've invalidated the option type caches due to potential race conditions with their population.
-     * Because we're using {@link Initializer}, we need this to be triggered in an {@link Extension}, so here is as good
-     * a place as any.
-     */
-    @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
-    public static void invalidateOptionTypeCaches() {
-        Options.invalidateCaches();
-    }
-
+  /**
+   * Make sure we've invalidated the option type caches due to potential race conditions with their
+   * population. Because we're using {@link Initializer}, we need this to be triggered in an {@link
+   * Extension}, so here is as good a place as any.
+   */
+  @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
+  public static void invalidateOptionTypeCaches() {
+    Options.invalidateCaches();
+  }
 }

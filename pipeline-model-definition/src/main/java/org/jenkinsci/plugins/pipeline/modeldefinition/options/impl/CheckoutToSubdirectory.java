@@ -24,40 +24,40 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 public class CheckoutToSubdirectory extends DeclarativeOption {
-    private String subdirectory;
+  private String subdirectory;
 
-    @DataBoundConstructor
-    public CheckoutToSubdirectory(@Nullable String subdirectory) {
-        this.subdirectory = subdirectory;
+  @DataBoundConstructor
+  public CheckoutToSubdirectory(@Nullable String subdirectory) {
+    this.subdirectory = subdirectory;
+  }
+
+  @CheckForNull
+  public String getSubdirectory() {
+    return subdirectory;
+  }
+
+  @Extension
+  @Symbol("checkoutToSubdirectory")
+  public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Check out SCM to a subdirectory of the workspace";
     }
 
-    @CheckForNull
-    public String getSubdirectory() {
-        return subdirectory;
+    @Override
+    public boolean canUseInStage() {
+      return true;
     }
-
-    @Extension @Symbol("checkoutToSubdirectory")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Check out SCM to a subdirectory of the workspace";
-        }
-
-        @Override
-        public boolean canUseInStage() {
-            return true;
-        }
-    }
+  }
 }

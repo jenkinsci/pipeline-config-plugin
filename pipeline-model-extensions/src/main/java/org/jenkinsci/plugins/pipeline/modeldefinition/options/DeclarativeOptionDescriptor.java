@@ -24,48 +24,48 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.options;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
-import org.jenkinsci.plugins.structs.SymbolLookup;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.jenkinsci.plugins.structs.SymbolLookup;
 
 public abstract class DeclarativeOptionDescriptor extends Descriptor<DeclarativeOption> {
 
-    public @NonNull String getName() {
-        Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
-        if (symbolValues.isEmpty()) {
-            throw new IllegalArgumentException("Declarative Option descriptor class " + this.getClass().getName()
-                    + " does not have a @Symbol and does not override getName().");
-        }
-        return symbolValues.iterator().next();
+  public @NonNull String getName() {
+    Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
+    if (symbolValues.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Declarative Option descriptor class "
+              + this.getClass().getName()
+              + " does not have a @Symbol and does not override getName().");
     }
+    return symbolValues.iterator().next();
+  }
 
-    /**
-     * If true, this option can be used in stages and is relevant there.
-     */
-    public boolean canUseInStage() {
-        return false;
-    }
+  /** If true, this option can be used in stages and is relevant there. */
+  public boolean canUseInStage() {
+    return false;
+  }
 
-    /**
-     * If true, this option can *only* be used in stages.
-     */
-    public boolean isStageOnly() {
-        return false;
-    }
+  /** If true, this option can *only* be used in stages. */
+  public boolean isStageOnly() {
+    return false;
+  }
 
-    /**
-     * Get all {@link DeclarativeOptionDescriptor}s.
-     *
-     * @return a list of all {@link DeclarativeOptionDescriptor}s registered.`
-     */
-    public static List<DeclarativeOptionDescriptor> all() {
-        ExtensionList<DeclarativeOptionDescriptor> descs = ExtensionList.lookup(DeclarativeOptionDescriptor.class);
-        return descs.stream().sorted(Comparator.comparing(DeclarativeOptionDescriptor::getName)).collect(Collectors.toList());
-    }
+  /**
+   * Get all {@link DeclarativeOptionDescriptor}s.
+   *
+   * @return a list of all {@link DeclarativeOptionDescriptor}s registered.`
+   */
+  public static List<DeclarativeOptionDescriptor> all() {
+    ExtensionList<DeclarativeOptionDescriptor> descs =
+        ExtensionList.lookup(DeclarativeOptionDescriptor.class);
+    return descs.stream()
+        .sorted(Comparator.comparing(DeclarativeOptionDescriptor::getName))
+        .collect(Collectors.toList());
+  }
 }

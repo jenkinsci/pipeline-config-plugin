@@ -24,10 +24,13 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.ParameterDefinition;
 import hudson.util.FormValidation;
+import java.util.Collections;
+import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
@@ -36,134 +39,141 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Collections;
-import java.util.List;
-
 public class InputDirective extends AbstractDirective<InputDirective> {
-    private final String message;
-    private String id;
-    private String submitter;
-    private String submitterParameter;
-    private List<ParameterDefinition> parameters = Collections.emptyList();
-    private String ok;
+  private final String message;
+  private String id;
+  private String submitter;
+  private String submitterParameter;
+  private List<ParameterDefinition> parameters = Collections.emptyList();
+  private String ok;
 
-    @DataBoundConstructor
-    public InputDirective(String message) {
-        this.message = message;
+  @DataBoundConstructor
+  public InputDirective(String message) {
+    this.message = message;
+  }
+
+  public String getMessage() {
+    return message;
+  }
+
+  @DataBoundSetter
+  public void setOk(String ok) {
+    this.ok = ok;
+  }
+
+  public String getOk() {
+    return ok;
+  }
+
+  @DataBoundSetter
+  public void setSubmitterParameter(String submitterParameter) {
+    this.submitterParameter = submitterParameter;
+  }
+
+  public String getSubmitterParameter() {
+    return submitterParameter;
+  }
+
+  @DataBoundSetter
+  public void setSubmitter(String submitter) {
+    this.submitter = submitter;
+  }
+
+  public String getSubmitter() {
+    return submitter;
+  }
+
+  @DataBoundSetter
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  @DataBoundSetter
+  public void setParameters(List<ParameterDefinition> parameters) {
+    this.parameters = parameters;
+  }
+
+  public List<ParameterDefinition> getParameters() {
+    return parameters;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<InputDirective> {
+    @Override
+    @NonNull
+    public String getName() {
+      return "input";
     }
 
-    public String getMessage() {
-        return message;
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Input";
     }
 
-    @DataBoundSetter
-    public void setOk(String ok) {
-        this.ok = ok;
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      return Collections.singletonList(StepDescriptor.byFunctionName("input"));
     }
 
-    public String getOk() {
-        return ok;
+    public Descriptor getInputDescriptor() {
+      return StepDescriptor.byFunctionName("input");
     }
 
-    @DataBoundSetter
-    public void setSubmitterParameter(String submitterParameter) {
-        this.submitterParameter = submitterParameter;
+    public FormValidation doCheckMessage(@QueryParameter String value) {
+      if (StringUtils.isEmpty(value)) {
+        return FormValidation.error("Input message must be provided.");
+      } else {
+        return FormValidation.ok();
+      }
     }
 
-    public String getSubmitterParameter() {
-        return submitterParameter;
-    }
-
-    @DataBoundSetter
-    public void setSubmitter(String submitter) {
-        this.submitter = submitter;
-    }
-
-    public String getSubmitter() {
-        return submitter;
-    }
-
-    @DataBoundSetter
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    @DataBoundSetter
-    public void setParameters(List<ParameterDefinition> parameters) {
-        this.parameters = parameters;
-    }
-
-    public List<ParameterDefinition> getParameters() {
-        return parameters;
-    }
-
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<InputDirective> {
-        @Override
-        @NonNull
-        public String getName() {
-            return "input";
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull InputDirective directive) {
+      if (directive.getMessage() != null) {
+        StringBuilder result = new StringBuilder("input {\n");
+        result
+            .append("message ")
+            .append(Snippetizer.object2Groovy(directive.getMessage()))
+            .append("\n");
+        if (!StringUtils.isEmpty(directive.getId())) {
+          result.append("id ").append(Snippetizer.object2Groovy(directive.getId())).append("\n");
         }
-
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Input";
+        if (!StringUtils.isEmpty(directive.getOk())) {
+          result.append("ok ").append(Snippetizer.object2Groovy(directive.getOk())).append("\n");
         }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            return Collections.singletonList(StepDescriptor.byFunctionName("input"));
+        if (!StringUtils.isEmpty(directive.getSubmitter())) {
+          result
+              .append("submitter ")
+              .append(Snippetizer.object2Groovy(directive.getSubmitter()))
+              .append("\n");
         }
-
-        public Descriptor getInputDescriptor() {
-            return StepDescriptor.byFunctionName("input");
+        if (!StringUtils.isEmpty(directive.getSubmitterParameter())) {
+          result
+              .append("submitterParameter ")
+              .append(Snippetizer.object2Groovy(directive.getSubmitterParameter()))
+              .append("\n");
         }
-
-        public FormValidation doCheckMessage(@QueryParameter String value) {
-            if (StringUtils.isEmpty(value)) {
-                return FormValidation.error("Input message must be provided.");
-            } else {
-                return FormValidation.ok();
-            }
+        if (!directive.getParameters().isEmpty()) {
+          result.append("parameters {\n");
+          for (ParameterDefinition p : directive.getParameters()) {
+            result
+                .append(Snippetizer.object2Groovy(UninstantiatedDescribable.from(p)))
+                .append("\n");
+          }
+          result.append("}\n");
         }
+        result.append("}\n");
+        return result.toString();
+      }
 
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull InputDirective directive) {
-            if (directive.getMessage() != null) {
-                StringBuilder result = new StringBuilder("input {\n");
-                result.append("message ").append(Snippetizer.object2Groovy(directive.getMessage())).append("\n");
-                if (!StringUtils.isEmpty(directive.getId())) {
-                    result.append("id ").append(Snippetizer.object2Groovy(directive.getId())).append("\n");
-                }
-                if (!StringUtils.isEmpty(directive.getOk())) {
-                    result.append("ok ").append(Snippetizer.object2Groovy(directive.getOk())).append("\n");
-                }
-                if (!StringUtils.isEmpty(directive.getSubmitter())) {
-                    result.append("submitter ").append(Snippetizer.object2Groovy(directive.getSubmitter())).append("\n");
-                }
-                if (!StringUtils.isEmpty(directive.getSubmitterParameter())) {
-                    result.append("submitterParameter ").append(Snippetizer.object2Groovy(directive.getSubmitterParameter())).append("\n");
-                }
-                if (!directive.getParameters().isEmpty()) {
-                    result.append("parameters {\n");
-                    for (ParameterDefinition p : directive.getParameters()) {
-                        result.append(Snippetizer.object2Groovy(UninstantiatedDescribable.from(p))).append("\n");
-                    }
-                    result.append("}\n");
-                }
-                result.append("}\n");
-                return result.toString();
-            }
-
-            return "// Input not defined\n";
-        }
+      return "// Input not defined\n";
     }
+  }
 }

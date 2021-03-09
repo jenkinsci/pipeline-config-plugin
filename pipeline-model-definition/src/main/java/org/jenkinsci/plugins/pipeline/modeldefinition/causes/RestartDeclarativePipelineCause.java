@@ -24,48 +24,50 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.causes;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Cause;
 import hudson.model.Run;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 public class RestartDeclarativePipelineCause extends Cause {
-    private int originRunNumber;
-    private String originStage;
-    private transient Run<?,?> run;
+  private int originRunNumber;
+  private String originStage;
+  private transient Run<?, ?> run;
 
-    public RestartDeclarativePipelineCause(@NonNull Run<?,?> original, @NonNull String originStage) {
-        this.originRunNumber = original.getNumber();
-        this.originStage = originStage;
-    }
+  public RestartDeclarativePipelineCause(@NonNull Run<?, ?> original, @NonNull String originStage) {
+    this.originRunNumber = original.getNumber();
+    this.originStage = originStage;
+  }
 
-    @Override public void onAddedTo(Run run) {
-        super.onAddedTo(run);
-        this.run = run;
-    }
+  @Override
+  public void onAddedTo(Run run) {
+    super.onAddedTo(run);
+    this.run = run;
+  }
 
-    @Override public void onLoad(Run<?,?> run) {
-        super.onLoad(run);
-        this.run = run;
-    }
+  @Override
+  public void onLoad(Run<?, ?> run) {
+    super.onLoad(run);
+    this.run = run;
+  }
 
-    public int getOriginRunNumber() {
-        return originRunNumber;
-    }
+  public int getOriginRunNumber() {
+    return originRunNumber;
+  }
 
-    @NonNull
-    public String getOriginStage() {
-        return originStage;
-    }
+  @NonNull
+  public String getOriginStage() {
+    return originStage;
+  }
 
-    @CheckForNull
-    public Run<?,?> getOriginal() {
-        return run.getParent().getBuildByNumber(originRunNumber);
-    }
+  @CheckForNull
+  public Run<?, ?> getOriginal() {
+    return run.getParent().getBuildByNumber(originRunNumber);
+  }
 
-    @Override
-    public String getShortDescription() {
-        return Messages.RestartedDeclarativePipelineCause_ShortDescription(originRunNumber, originStage);
-    }
+  @Override
+  public String getShortDescription() {
+    return Messages.RestartedDeclarativePipelineCause_ShortDescription(
+        originRunNumber, originStage);
+  }
 }

@@ -25,6 +25,8 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
@@ -33,33 +35,30 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.parser.ASTParserUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 public class BuildingTagConditional extends TagConditional {
 
-    @DataBoundConstructor
-    public BuildingTagConditional() {
-        super(null);
+  @DataBoundConstructor
+  public BuildingTagConditional() {
+    super(null);
+  }
+
+  @Extension
+  @Symbol("buildingTag")
+  public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<TagConditional> {
+    @Override
+    public String getDisplayName() {
+      return "Execute this stage if the build is running against an SCM tag";
     }
 
-    @Extension
-    @Symbol("buildingTag")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<TagConditional> {
-        @Override
-        public String getDisplayName() {
-            return "Execute this stage if the build is running against an SCM tag";
-        }
-
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
-        }
-
-        @NonNull
-        @Override
-        public String getScriptClass() {
-            return TagConditional.class.getName() + "Script";
-        }
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      return ASTParserUtils.transformWhenContentToRuntimeAST(original);
     }
+
+    @NonNull
+    @Override
+    public String getScriptClass() {
+      return TagConditional.class.getName() + "Script";
+    }
+  }
 }

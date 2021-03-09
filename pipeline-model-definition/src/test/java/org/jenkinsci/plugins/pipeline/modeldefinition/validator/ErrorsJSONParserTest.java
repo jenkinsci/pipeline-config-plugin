@@ -31,21 +31,21 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class ErrorsJSONParserTest extends BaseParserLoaderTest {
-    private String configName;
-    private String expectedError;
+  private String configName;
+  private String expectedError;
 
-    public ErrorsJSONParserTest(String configName, String expectedError) {
-        this.configName = configName;
-        this.expectedError = expectedError;
-    }
+  public ErrorsJSONParserTest(String configName, String expectedError) {
+    this.configName = configName;
+    this.expectedError = expectedError;
+  }
 
-    @Parameterized.Parameters(name="Name: {0}")
-    public static Iterable<Object[]> generateParameters() {
-        return AbstractModelDefTest.configsWithErrors();
-    }
+  @Parameterized.Parameters(name = "Name: {0}")
+  public static Iterable<Object[]> generateParameters() {
+    return AbstractModelDefTest.configsWithErrors();
+  }
 
-    @Test
-    public void parseAndValidateJSONWithError() throws Exception {
-        findErrorInJSON(expectedError, configName);
-    }
+  @Test
+  public void parseAndValidateJSONWithError() throws Exception {
+    findErrorInJSON(expectedError, configName);
+  }
 }

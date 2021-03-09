@@ -24,13 +24,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
-/**
- * Globally defined conditionals which are checked for all stages in all builds of all jobs.
- */
-public abstract class GlobalStageConditional<S extends GlobalStageConditional<S>> extends DeclarativeStageConditional<S> {
+/** Globally defined conditionals which are checked for all stages in all builds of all jobs. */
+public abstract class GlobalStageConditional<S extends GlobalStageConditional<S>>
+    extends DeclarativeStageConditional<S> {
 
-    @Override
-    public GlobalStageConditionalDescriptor getDescriptor() {
-        return (GlobalStageConditionalDescriptor) super.getDescriptor();
-    }
+  @Override
+  public GlobalStageConditionalDescriptor getDescriptor() {
+    return (GlobalStageConditionalDescriptor) super.getDescriptor();
+  }
 }

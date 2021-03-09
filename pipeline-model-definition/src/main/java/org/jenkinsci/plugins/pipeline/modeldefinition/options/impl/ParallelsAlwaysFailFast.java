@@ -24,33 +24,30 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 public class ParallelsAlwaysFailFast extends DeclarativeOption {
 
-    @DataBoundConstructor
-    public ParallelsAlwaysFailFast() {
+  @DataBoundConstructor
+  public ParallelsAlwaysFailFast() {}
 
+  @Extension
+  @Symbol("parallelsAlwaysFailFast")
+  public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Parallel stages always fail fast";
     }
 
-
-    @Extension @Symbol("parallelsAlwaysFailFast")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Parallel stages always fail fast";
-        }
-
-        @Override
-        public boolean canUseInStage() {
-            return false;
-        }
+    @Override
+    public boolean canUseInStage() {
+      return false;
     }
+  }
 }

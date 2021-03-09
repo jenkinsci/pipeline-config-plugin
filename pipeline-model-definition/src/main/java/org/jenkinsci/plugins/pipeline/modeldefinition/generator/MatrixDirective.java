@@ -23,70 +23,68 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import java.util.ArrayList;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.List;
-
 public class MatrixDirective extends AbstractDirective<MatrixDirective> {
 
-    private List<AbstractDirective> axes;
+  private List<AbstractDirective> axes;
 
-    @DataBoundConstructor
-    public MatrixDirective(List<AbstractDirective> axes) {
-        this.axes = axes;
+  @DataBoundConstructor
+  public MatrixDirective(List<AbstractDirective> axes) {
+    this.axes = axes;
+  }
+
+  public List<AbstractDirective> getAxes() {
+    return axes;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<MatrixDirective> {
+    @Override
+    @NonNull
+    public String getName() {
+      return "matrix";
     }
 
-    public List<AbstractDirective> getAxes() {
-        return axes;
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Matrix";
     }
 
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<MatrixDirective> {
-        @Override
-        @NonNull
-        public String getName() {
-            return "matrix";
-        }
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      List<Descriptor> descriptors = new ArrayList<>();
+      descriptors.add(Jenkins.get().getDescriptorByType(AxesDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(ExcludesDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(AgentDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(EnvironmentDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(InputDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(OptionsDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(PostDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(ToolsDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(WhenDirective.DescriptorImpl.class));
+      descriptors.add(Jenkins.get().getDescriptorByType(StagesDirective.DescriptorImpl.class));
 
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Matrix";
-        }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            List<Descriptor> descriptors = new ArrayList<>();
-            descriptors.add(Jenkins.get().getDescriptorByType(AxesDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(ExcludesDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(AgentDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(EnvironmentDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(InputDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(OptionsDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(PostDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(ToolsDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(WhenDirective.DescriptorImpl.class));
-            descriptors.add(Jenkins.get().getDescriptorByType(StagesDirective.DescriptorImpl.class));
-
-            return descriptors;
-        }
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull MatrixDirective matrix) {
-            StringBuilder result = new StringBuilder("matrix {\n" );
-            if( matrix.axes != null){
-                matrix.axes.stream().forEach( a -> result.append(a.toGroovy(false)).append("\n"));
-            }
-            result.append("}\n");
-            return result.toString();
-        }
+      return descriptors;
     }
 
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull MatrixDirective matrix) {
+      StringBuilder result = new StringBuilder("matrix {\n");
+      if (matrix.axes != null) {
+        matrix.axes.stream().forEach(a -> result.append(a.toGroovy(false)).append("\n"));
+      }
+      result.append("}\n");
+      return result.toString();
+    }
+  }
 }

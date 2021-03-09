@@ -27,11 +27,11 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
 public abstract class GlobalStageConditionalScript<S extends GlobalStageConditional<S>>
-        extends DeclarativeStageConditionalScript<S> {
+    extends DeclarativeStageConditionalScript<S> {
 
-    public GlobalStageConditionalScript(CpsScript s, S c) {
-        super(s, c);
-    }
+  public GlobalStageConditionalScript(CpsScript s, S c) {
+    super(s, c);
+  }
 
-    public abstract boolean evaluate();
+  public abstract boolean evaluate();
 }

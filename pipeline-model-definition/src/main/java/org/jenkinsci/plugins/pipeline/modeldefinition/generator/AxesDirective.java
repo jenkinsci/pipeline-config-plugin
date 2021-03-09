@@ -23,70 +23,70 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import java.util.ArrayList;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.List;
-
 public class AxesDirective extends AbstractDirective<AxesDirective> {
 
-    private List<AbstractDirective> axis;
-    @DataBoundConstructor
-    public AxesDirective(List<AbstractDirective> axis) {
-        this.axis = axis;
+  private List<AbstractDirective> axis;
+
+  @DataBoundConstructor
+  public AxesDirective(List<AbstractDirective> axis) {
+    this.axis = axis;
+  }
+
+  public List<AbstractDirective> getAxis() {
+    return axis;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<AxesDirective> {
+
+    @NonNull
+    @Override
+    public boolean isTopLevel() {
+      return false;
     }
 
-    public List<AbstractDirective> getAxis() {
-        return axis;
+    @Override
+    @NonNull
+    public String getName() {
+      return "axes";
     }
 
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<AxesDirective> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Axes";
+    }
 
-        @NonNull
-        @Override
-        public boolean isTopLevel() {
-            return false;
-        }
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      List<Descriptor> descriptors = new ArrayList<>();
+      descriptors.add(Jenkins.get().getDescriptorByType(AxisDirective.DescriptorImpl.class));
 
-        @Override
-        @NonNull
-        public String getName() {
-            return "axes";
-        }
+      return descriptors;
+    }
 
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Axes";
-        }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            List<Descriptor> descriptors = new ArrayList<>();
-            descriptors.add(Jenkins.get().getDescriptorByType(AxisDirective.DescriptorImpl.class));
-
-            return descriptors;
-        }
-
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull AxesDirective axes) {
-            StringBuffer result = new StringBuffer("axes {\n");
-            if(axes.axis != null){
-                axes.axis.stream().forEach( axis -> {
-                    result.append(axis.toGroovy(false));
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull AxesDirective axes) {
+      StringBuffer result = new StringBuffer("axes {\n");
+      if (axes.axis != null) {
+        axes.axis.stream()
+            .forEach(
+                axis -> {
+                  result.append(axis.toGroovy(false));
                 });
-            }
-            result.append("\n}");
-            return result.toString();
-        }
+      }
+      result.append("\n}");
+      return result.toString();
     }
-
+  }
 }

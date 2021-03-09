@@ -25,95 +25,95 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Objects;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-import java.util.Objects;
 
 /**
  * Special case of a {@link ModelASTWhenCondition} generated for a globally defined when condition.
  */
 public class InvisibleGlobalWhenCondition extends ModelASTWhenCondition {
-    private final String stageName;
-    private final ModelASTStageBase stage;
+  private final String stageName;
+  private final ModelASTStageBase stage;
 
-    /**
-     * Used to create invisible when conditions without base stage information, used for the "allOf" conditional
-     * generated when a stage already has when conditions.
-     */
-    public InvisibleGlobalWhenCondition() {
-        this(null, null);
+  /**
+   * Used to create invisible when conditions without base stage information, used for the "allOf"
+   * conditional generated when a stage already has when conditions.
+   */
+  public InvisibleGlobalWhenCondition() {
+    this(null, null);
+  }
+
+  /**
+   * Used to create invisible when conditions with a base stage for comparison and querying.
+   *
+   * @param stageName The name of the stage this condition belongs to. Explicitly specified due to
+   *     auto-generated stage names with matrices.
+   * @param stage The {@link ModelASTStageBase} for the stage this condition belongs to, for
+   *     inspection.
+   */
+  public InvisibleGlobalWhenCondition(String stageName, ModelASTStageBase stage) {
+    super(null);
+    this.stageName = stageName;
+    this.stage = stage;
+  }
+
+  public String getStageName() {
+    return stageName;
+  }
+
+  public ModelASTStageBase getStage() {
+    return stage;
+  }
+
+  @Override
+  @NonNull
+  public JSONObject toJSON() {
+    return new JSONObject();
+  }
+
+  @Override
+  @NonNull
+  public String toGroovy() {
+    return "";
+  }
+
+  @Override
+  public void validate(@NonNull ModelValidator validator) {}
+
+  @Override
+  public void removeSourceLocation() {
+    super.removeSourceLocation();
+    removeSourceLocationsFrom(stage);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
     }
 
-    /**
-     * Used to create invisible when conditions with a base stage for comparison and querying.
-     *
-     * @param stageName The name of the stage this condition belongs to. Explicitly specified due to auto-generated stage 
-     *                  names with matrices.
-     * @param stage The {@link ModelASTStageBase} for the stage this condition belongs to, for inspection.
-     */
-    public InvisibleGlobalWhenCondition(String stageName, ModelASTStageBase stage) {
-        super(null);
-        this.stageName = stageName;
-        this.stage = stage;
+    InvisibleGlobalWhenCondition that = (InvisibleGlobalWhenCondition) o;
+
+    if (getStageName() != null
+        ? !getStageName().equals(that.getStageName())
+        : that.getStageName() != null) {
+      return false;
     }
+    return getStage() != null ? getStage().equals(that.getStage()) : that.getStage() == null;
+  }
 
-    public String getStageName() {
-        return stageName;
-    }
-
-    public ModelASTStageBase getStage() {
-        return stage;
-    }
-
-    @Override
-    @NonNull
-    public JSONObject toJSON() {
-        return new JSONObject();
-    }
-
-    @Override
-    @NonNull
-    public String toGroovy() {
-        return "";
-    }
-
-    @Override
-    public void validate(@NonNull ModelValidator validator) {
-    }
-
-    @Override
-    public void removeSourceLocation() {
-        super.removeSourceLocation();
-        removeSourceLocationsFrom(stage);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-
-        InvisibleGlobalWhenCondition that = (InvisibleGlobalWhenCondition) o;
-
-        if (getStageName() != null ? !getStageName().equals(that.getStageName()) : that.getStageName() != null) {
-            return false;
-        }
-        return getStage() != null ? getStage().equals(that.getStage()) : that.getStage() == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + Objects.hashCode(getStage());
-        result = 31 * result + Objects.hashCode(getStageName());
-        return result;
-    }
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + Objects.hashCode(getStage());
+    result = 31 * result + Objects.hashCode(getStageName());
+    return result;
+  }
 }

@@ -27,6 +27,5 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 import hudson.model.InvisibleAction;
 
 public class DeclarativeJobAction extends InvisibleAction {
-    public DeclarativeJobAction() {
-    }
+  public DeclarativeJobAction() {}
 }

@@ -29,11 +29,10 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import hudson.Extension;
 import hudson.model.RootAction;
+import java.io.IOException;
+import javax.servlet.ServletException;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
 
 /**
  * Endpoint for exposing the AST JSON schema.
@@ -42,37 +41,36 @@ import java.io.IOException;
  */
 @Extension
 public class ASTSchema implements RootAction {
-    public static final String AST_SCHEMA_URL = "pipeline-model-schema";
+  public static final String AST_SCHEMA_URL = "pipeline-model-schema";
 
-    @Override
-    public String getUrlName() {
-        return AST_SCHEMA_URL;
-    }
+  @Override
+  public String getUrlName() {
+    return AST_SCHEMA_URL;
+  }
 
-    @Override
-    public String getIconFileName() {
-        return null;
-    }
+  @Override
+  public String getIconFileName() {
+    return null;
+  }
 
-    @Override
-    public String getDisplayName() {
-        return null;
-    }
+  @Override
+  public String getDisplayName() {
+    return null;
+  }
 
-    @SuppressWarnings("unused")
-    public void doJson(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-        rsp.serveFile(req, getClass().getResource("/ast-schema.json"));
-    }
+  @SuppressWarnings("unused")
+  public void doJson(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+    rsp.serveFile(req, getClass().getResource("/ast-schema.json"));
+  }
 
-    /**
-     * Get the Pipeline Config AST JSON schema.
-     *
-     * @return the schema in {@link JsonSchema} form.
-     * @throws ProcessingException if there are issues reading the schema
-     */
-    public static JsonSchema getJSONSchema() throws ProcessingException {
-        final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-        return factory.getJsonSchema("resource:/ast-schema.json");
-    }
-
+  /**
+   * Get the Pipeline Config AST JSON schema.
+   *
+   * @return the schema in {@link JsonSchema} form.
+   * @throws ProcessingException if there are issues reading the schema
+   */
+  public static JsonSchema getJSONSchema() throws ProcessingException {
+    final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+    return factory.getJsonSchema("resource:/ast-schema.json");
+  }
 }

@@ -25,59 +25,56 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
-
-
-import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
-/**
- * Helper for simplified Credentials handling in {@code environment{}}
- */
+/** Helper for simplified Credentials handling in {@code environment{}} */
 public class CredentialWrapper implements Serializable {
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    private final String credentialId;
-    private final List<Map<String, Object>> withCredentialsParameters;
+  private final String credentialId;
+  private final List<Map<String, Object>> withCredentialsParameters;
 
-    @Restricted(NoExternalUse.class)
-    public CredentialWrapper(String credentialId, List<Map<String, Object>> withCredentialsParameters) {
-        this.withCredentialsParameters = withCredentialsParameters;
-        this.credentialId = credentialId;
-    }
+  @Restricted(NoExternalUse.class)
+  public CredentialWrapper(
+      String credentialId, List<Map<String, Object>> withCredentialsParameters) {
+    this.withCredentialsParameters = withCredentialsParameters;
+    this.credentialId = credentialId;
+  }
 
-    @Whitelisted
-    public String getCredentialId() {
-        return credentialId;
-    }
+  @Whitelisted
+  public String getCredentialId() {
+    return credentialId;
+  }
 
-    @Whitelisted
-    public void addParameters(String envVarName, List<Map<String, Object>> list) {
-        list.addAll(resolveParameters(envVarName));
-    }
+  @Whitelisted
+  public void addParameters(String envVarName, List<Map<String, Object>> list) {
+    list.addAll(resolveParameters(envVarName));
+  }
 
-    @Whitelisted
-    public List<Map<String, Object>> resolveParameters(String envVarName) {
-        List<Map<String, Object>> newList = new ArrayList<>(withCredentialsParameters.size());
-        for (Map<String, Object> params : withCredentialsParameters) {
-            Map<String, Object> newP = new HashMap<>();
-            for (Map.Entry<String, Object> p : params.entrySet()) {
-                Object value = p.getValue();
-                if (value instanceof CredentialsBindingHandler.EnvVarResolver) {
-                    newP.put(p.getKey(), ((CredentialsBindingHandler.EnvVarResolver)value).resolve(envVarName));
-                } else {
-                    newP.put(p.getKey(), p.getValue());
-                }
-            }
-            newList.add(newP);
+  @Whitelisted
+  public List<Map<String, Object>> resolveParameters(String envVarName) {
+    List<Map<String, Object>> newList = new ArrayList<>(withCredentialsParameters.size());
+    for (Map<String, Object> params : withCredentialsParameters) {
+      Map<String, Object> newP = new HashMap<>();
+      for (Map.Entry<String, Object> p : params.entrySet()) {
+        Object value = p.getValue();
+        if (value instanceof CredentialsBindingHandler.EnvVarResolver) {
+          newP.put(
+              p.getKey(), ((CredentialsBindingHandler.EnvVarResolver) value).resolve(envVarName));
+        } else {
+          newP.put(p.getKey(), p.getValue());
         }
-        return newList;
+      }
+      newList.add(newP);
     }
+    return newList;
+  }
 }

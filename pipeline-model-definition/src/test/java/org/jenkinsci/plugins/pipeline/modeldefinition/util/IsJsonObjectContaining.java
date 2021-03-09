@@ -23,15 +23,14 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.util;
 
+import static org.hamcrest.core.IsAnything.anything;
+import static org.hamcrest.core.IsEqual.equalTo;
+
+import java.util.Iterator;
 import net.sf.json.JSONObject;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-
-import java.util.Iterator;
-
-import static org.hamcrest.core.IsAnything.anything;
-import static org.hamcrest.core.IsEqual.equalTo;
 
 /**
  * {@link Matcher} for {@link JSONObject}s.
@@ -40,52 +39,53 @@ import static org.hamcrest.core.IsEqual.equalTo;
  */
 public class IsJsonObjectContaining extends TypeSafeMatcher<JSONObject> {
 
-    private final Matcher<String> keyMatcher;
-    private final Matcher<?> valueMatcher;
+  private final Matcher<String> keyMatcher;
+  private final Matcher<?> valueMatcher;
 
-    public IsJsonObjectContaining(Matcher<String> keyMatcher, Matcher<?> valueMatcher) {
-        this.keyMatcher = keyMatcher;
-        this.valueMatcher = valueMatcher;
-    }
+  public IsJsonObjectContaining(Matcher<String> keyMatcher, Matcher<?> valueMatcher) {
+    this.keyMatcher = keyMatcher;
+    this.valueMatcher = valueMatcher;
+  }
 
-    @Override
-    protected boolean matchesSafely(JSONObject item) {
-        Iterator keys = item.keys();
-        while (keys.hasNext()) {
-            String key = (String)keys.next();
-            if (keyMatcher.matches(key) && valueMatcher.matches(item.opt(key))) {
-                return true;
-            }
-        }
-        return false;
+  @Override
+  protected boolean matchesSafely(JSONObject item) {
+    Iterator keys = item.keys();
+    while (keys.hasNext()) {
+      String key = (String) keys.next();
+      if (keyMatcher.matches(key) && valueMatcher.matches(item.opt(key))) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    @Override
-    public void describeTo(Description description) {
-        description.appendText("JSONObject containing [")
-                .appendDescriptionOf(keyMatcher)
-                .appendText("->")
-                .appendDescriptionOf(valueMatcher)
-                .appendText("]");
-    }
+  @Override
+  public void describeTo(Description description) {
+    description
+        .appendText("JSONObject containing [")
+        .appendDescriptionOf(keyMatcher)
+        .appendText("->")
+        .appendDescriptionOf(valueMatcher)
+        .appendText("]");
+  }
 
-    public static Matcher<JSONObject> hasEntry(Matcher<String> keyMatcher, Matcher<?> valueMatcher) {
-        return new IsJsonObjectContaining(keyMatcher, valueMatcher);
-    }
+  public static Matcher<JSONObject> hasEntry(Matcher<String> keyMatcher, Matcher<?> valueMatcher) {
+    return new IsJsonObjectContaining(keyMatcher, valueMatcher);
+  }
 
-    public static Matcher<JSONObject> hasEntry(String key, Matcher<?> valueMatcher) {
-        return new IsJsonObjectContaining(equalTo(key), valueMatcher);
-    }
+  public static Matcher<JSONObject> hasEntry(String key, Matcher<?> valueMatcher) {
+    return new IsJsonObjectContaining(equalTo(key), valueMatcher);
+  }
 
-    public static Matcher<JSONObject> hasEntry(String key, Object value) {
-        return new IsJsonObjectContaining(equalTo(key), equalTo(value));
-    }
+  public static Matcher<JSONObject> hasEntry(String key, Object value) {
+    return new IsJsonObjectContaining(equalTo(key), equalTo(value));
+  }
 
-    public static Matcher<JSONObject> hasKey(Matcher<String> keyMatcher) {
-        return new IsJsonObjectContaining(keyMatcher, anything());
-    }
+  public static Matcher<JSONObject> hasKey(Matcher<String> keyMatcher) {
+    return new IsJsonObjectContaining(keyMatcher, anything());
+  }
 
-    public static Matcher<JSONObject> hasKey(String key) {
-        return new IsJsonObjectContaining(equalTo(key), anything());
-    }
+  public static Matcher<JSONObject> hasKey(String key) {
+    return new IsJsonObjectContaining(equalTo(key), anything());
+  }
 }

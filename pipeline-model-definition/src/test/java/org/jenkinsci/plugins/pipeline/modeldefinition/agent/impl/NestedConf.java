@@ -27,31 +27,24 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import java.io.Serializable;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.io.Serializable;
-
 public class NestedConf extends AbstractDescribableImpl<NestedConf> implements Serializable {
-    @DataBoundConstructor
-    public NestedConf() {
+  @DataBoundConstructor
+  public NestedConf() {}
 
-    }
+  @DataBoundSetter public String foo;
+  @DataBoundSetter public boolean bar;
 
-    @DataBoundSetter
-    public String foo;
-    @DataBoundSetter
-    public boolean bar;
+  @Override
+  public String toString() {
+    return "foo: " + foo + ", bar: " + bar;
+  }
 
-    @Override
-    public String toString() {
-        return "foo: " + foo + ", bar: " + bar;
-    }
-
-    @Extension
-    @Symbol("nestedConf")
-    public static class NestedDesc extends Descriptor<NestedConf> {
-    }
+  @Extension
+  @Symbol("nestedConf")
+  public static class NestedDesc extends Descriptor<NestedConf> {}
 }
-

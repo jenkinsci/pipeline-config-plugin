@@ -24,11 +24,14 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.model.Action;
 import hudson.model.InvisibleAction;
 import hudson.model.Queue;
 import hudson.model.Run;
+import java.io.IOException;
+import java.util.List;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowFactoryAction2;
 import org.jenkinsci.plugins.workflow.flow.FlowCopier;
@@ -36,57 +39,54 @@ import org.jenkinsci.plugins.workflow.flow.FlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.util.List;
+public class RestartFlowFactoryAction extends InvisibleAction
+    implements CpsFlowFactoryAction2, Queue.QueueAction {
+  private String originRunId;
 
-public class RestartFlowFactoryAction extends InvisibleAction implements CpsFlowFactoryAction2, Queue.QueueAction {
-    private String originRunId;
+  public RestartFlowFactoryAction(@NonNull String originRunId) {
+    this.originRunId = originRunId;
+  }
 
-    public RestartFlowFactoryAction(@NonNull String originRunId) {
-        this.originRunId = originRunId;
-    }
+  public String getOriginRunId() {
+    return originRunId;
+  }
 
-    public String getOriginRunId() {
-        return originRunId;
-    }
+  /** Not allowing restart attempts to be collapsed into the same build. */
+  @Override
+  public boolean shouldSchedule(List<Action> actions) {
+    return true;
+  }
 
-    /**
-     * Not allowing restart attempts to be collapsed into the same build.
-     */
-    @Override
-    public boolean shouldSchedule(List<Action> actions) {
-        return true;
-    }
-
-    @Override
-    public CpsFlowExecution create(FlowDefinition def, FlowExecutionOwner owner, List<? extends Action> actions) throws IOException {
-        Run original = Run.fromExternalizableId(originRunId);
-        String origScript = null;
-        boolean origSandbox = true;
-        if (original instanceof FlowExecutionOwner.Executable) {
-            FlowExecutionOwner originalOwner = ((FlowExecutionOwner.Executable) original).asFlowExecutionOwner();
-            if (originalOwner != null) {
-                try {
-                    for (FlowCopier copier : ExtensionList.lookup(FlowCopier.class)) {
-                        copier.copy(originalOwner, owner);
-                    }
-                } catch (InterruptedException x) {
-                    throw new IOException("Failed to copy metadata", x);
-                }
-                FlowExecution origExecution = originalOwner.getOrNull();
-                if (origExecution instanceof CpsFlowExecution) {
-                    origScript = ((CpsFlowExecution) origExecution).getScript();
-                    origSandbox = ((CpsFlowExecution) origExecution).isSandbox();
-                }
-            }
+  @Override
+  public CpsFlowExecution create(
+      FlowDefinition def, FlowExecutionOwner owner, List<? extends Action> actions)
+      throws IOException {
+    Run original = Run.fromExternalizableId(originRunId);
+    String origScript = null;
+    boolean origSandbox = true;
+    if (original instanceof FlowExecutionOwner.Executable) {
+      FlowExecutionOwner originalOwner =
+          ((FlowExecutionOwner.Executable) original).asFlowExecutionOwner();
+      if (originalOwner != null) {
+        try {
+          for (FlowCopier copier : ExtensionList.lookup(FlowCopier.class)) {
+            copier.copy(originalOwner, owner);
+          }
+        } catch (InterruptedException x) {
+          throw new IOException("Failed to copy metadata", x);
         }
-
-        if (origScript != null) {
-            return new CpsFlowExecution(origScript, origSandbox, owner);
-        } else {
-            return null;
+        FlowExecution origExecution = originalOwner.getOrNull();
+        if (origExecution instanceof CpsFlowExecution) {
+          origScript = ((CpsFlowExecution) origExecution).getScript();
+          origSandbox = ((CpsFlowExecution) origExecution).isSandbox();
         }
+      }
     }
 
+    if (origScript != null) {
+      return new CpsFlowExecution(origScript, origSandbox, owner);
+    } else {
+      return null;
+    }
+  }
 }

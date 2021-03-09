@@ -31,34 +31,34 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 public class LabelAndOtherFieldAgent extends DeclarativeAgent<LabelAndOtherFieldAgent> {
-    private String label;
-    private String otherField;
-    private NestedConf nested;
+  private String label;
+  private String otherField;
+  private NestedConf nested;
 
-    @DataBoundConstructor
-    public LabelAndOtherFieldAgent(String label, String otherField) {
-        this.label = label;
-        this.otherField = otherField;
-    }
+  @DataBoundConstructor
+  public LabelAndOtherFieldAgent(String label, String otherField) {
+    this.label = label;
+    this.otherField = otherField;
+  }
 
-    public String getLabel() {
-        return label;
-    }
+  public String getLabel() {
+    return label;
+  }
 
-    public String getOtherField() {
-        return otherField;
-    }
+  public String getOtherField() {
+    return otherField;
+  }
 
-    @DataBoundSetter
-    public void setNested(NestedConf n) {
-        this.nested = n;
-    }
+  @DataBoundSetter
+  public void setNested(NestedConf n) {
+    this.nested = n;
+  }
 
-    public NestedConf getNested() {
-        return nested;
-    }
+  public NestedConf getNested() {
+    return nested;
+  }
 
-    @Extension(ordinal = 1100) @Symbol("otherField")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor<LabelAndOtherFieldAgent> {
-    }
+  @Extension(ordinal = 1100)
+  @Symbol("otherField")
+  public static class DescriptorImpl extends DeclarativeAgentDescriptor<LabelAndOtherFieldAgent> {}
 }

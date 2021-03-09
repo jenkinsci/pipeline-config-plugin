@@ -25,40 +25,40 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.credentials.impl;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.FileBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 import org.jenkinsci.plugins.plaincredentials.FileCredentials;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Extension
 public class FileCredentialsHandler extends CredentialsBindingHandler<FileCredentials> {
 
-    @NonNull
-    @Override
-    public List<MultiBinding<FileCredentials>> toBindings(String varName, String credentialsId) {
-        return Collections.<MultiBinding<FileCredentials>>singletonList(new FileBinding(varName, credentialsId));
-    }
+  @NonNull
+  @Override
+  public List<MultiBinding<FileCredentials>> toBindings(String varName, String credentialsId) {
+    return Collections.<MultiBinding<FileCredentials>>singletonList(
+        new FileBinding(varName, credentialsId));
+  }
 
-    @NonNull
-    @Override
-    public Class<? extends StandardCredentials> type() {
-        return FileCredentials.class;
-    }
+  @NonNull
+  @Override
+  public Class<? extends StandardCredentials> type() {
+    return FileCredentials.class;
+  }
 
-    @NonNull
-    @Override
-    public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("$class", FileBinding.class.getName());
-        map.put("variable", new EnvVarResolver());
-        map.put("credentialsId", credentialsId);
-        return Collections.singletonList(map);
-    }
+  @NonNull
+  @Override
+  public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
+    Map<String, Object> map = new HashMap<>();
+    map.put("$class", FileBinding.class.getName());
+    map.put("variable", new EnvVarResolver());
+    map.put("credentialsId", credentialsId);
+    return Collections.singletonList(map);
+  }
 }

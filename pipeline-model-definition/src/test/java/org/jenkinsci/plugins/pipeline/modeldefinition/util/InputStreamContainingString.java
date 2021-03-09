@@ -25,53 +25,49 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.util;
 
-import org.apache.commons.io.IOUtils;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import org.apache.commons.io.IOUtils;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 
-/**
- * A {@link org.hamcrest.Matcher} on the content of an {@link InputStream} as a {@link String}.
- */
+/** A {@link org.hamcrest.Matcher} on the content of an {@link InputStream} as a {@link String}. */
 public class InputStreamContainingString extends TypeSafeMatcher<InputStream> {
 
-    @NonNull
-    private final Matcher<String> contentMatcher;
-    @CheckForNull
-    private final Charset encoding;
+  @NonNull private final Matcher<String> contentMatcher;
+  @CheckForNull private final Charset encoding;
 
-    public InputStreamContainingString(@NonNull Matcher<String> contentMatcher, @CheckForNull Charset encoding) {
-        this.contentMatcher = contentMatcher;
-        this.encoding = encoding;
-    }
+  public InputStreamContainingString(
+      @NonNull Matcher<String> contentMatcher, @CheckForNull Charset encoding) {
+    this.contentMatcher = contentMatcher;
+    this.encoding = encoding;
+  }
 
-    @Override
-    protected boolean matchesSafely(InputStream item) {
-        try {
-            String s = IOUtils.toString(item, encoding);
-            return contentMatcher.matches(s);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read to String.", e);
-        }
+  @Override
+  protected boolean matchesSafely(InputStream item) {
+    try {
+      String s = IOUtils.toString(item, encoding);
+      return contentMatcher.matches(s);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read to String.", e);
     }
+  }
 
-    @Override
-    public void describeTo(Description description) {
-        description.appendText("InputStream containing ")
-                .appendDescriptionOf(contentMatcher);
-    }
+  @Override
+  public void describeTo(Description description) {
+    description.appendText("InputStream containing ").appendDescriptionOf(contentMatcher);
+  }
 
-    public static Matcher<InputStream> inputStream(Matcher<String> matcher, @CheckForNull Charset encoding) {
-        return new InputStreamContainingString(matcher, encoding);
-    }
+  public static Matcher<InputStream> inputStream(
+      Matcher<String> matcher, @CheckForNull Charset encoding) {
+    return new InputStreamContainingString(matcher, encoding);
+  }
 
-    public static Matcher<InputStream> inputStream(Matcher<String> matcher) {
-        return inputStream(matcher, null);
-    }
+  public static Matcher<InputStream> inputStream(Matcher<String> matcher) {
+    return inputStream(matcher, null);
+  }
 }

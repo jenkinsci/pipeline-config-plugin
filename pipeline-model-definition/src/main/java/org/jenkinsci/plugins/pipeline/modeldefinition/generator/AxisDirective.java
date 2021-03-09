@@ -23,90 +23,84 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class AxisDirective extends AbstractDirective<AxisDirective> {
 
-    private String name;
-    private String values;
-    private boolean notValues;
+  private String name;
+  private String values;
+  private boolean notValues;
 
-    @DataBoundConstructor
-    public AxisDirective(String name, String values, boolean notValues) {
-        this.name = name;
-        this.values = values;
-        this.notValues = notValues;
+  @DataBoundConstructor
+  public AxisDirective(String name, String values, boolean notValues) {
+    this.name = name;
+    this.values = values;
+    this.notValues = notValues;
+  }
 
+  @NonNull
+  public String getName() {
+    return name;
+  }
+
+  public String getValues() {
+    return values;
+  }
+
+  public boolean isNotValues() {
+    return notValues;
+  }
+
+  static String tokenize(String values) {
+    return Arrays.asList(values.split("\\s*,\\s*")).stream()
+        .map(token -> String.format("'%s'", token))
+        .collect(Collectors.joining(","));
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<AxisDirective> {
+
+    @NonNull
+    @Override
+    public boolean isTopLevel() {
+      return false;
     }
+
+    @Override
     @NonNull
     public String getName() {
-        return name;
+      return "axis";
     }
 
-    public String getValues() {
-        return values;
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Axis";
     }
 
-    public boolean isNotValues() {
-        return notValues;
+    @NonNull
+    @Override
+    public List<Descriptor> getDescriptors() {
+      return Collections.emptyList();
     }
 
-    static String tokenize(String values) {
-        return Arrays.asList(values.split("\\s*,\\s*"))
-                .stream()
-                .map(token -> String.format("'%s'", token))
-                .collect(Collectors.joining(","))
-                ;
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull AxisDirective axis) {
+      StringBuffer sb = new StringBuffer();
+      sb.append("axis {\n");
+      sb.append("name '" + axis.getName() + "'\n");
+      if (axis.notValues) sb.append("notValues " + tokenize(axis.getValues()) + "\n");
+      else sb.append("values " + tokenize(axis.getValues()) + "\n");
+      sb.append("}");
+      return sb.toString();
     }
-
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<AxisDirective> {
-
-        @NonNull
-        @Override
-        public boolean isTopLevel() {
-            return false;
-        }
-
-        @Override
-        @NonNull
-        public String getName() {
-            return "axis";
-        }
-
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Axis";
-        }
-
-        @NonNull
-        @Override
-        public List<Descriptor> getDescriptors() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull AxisDirective axis) {
-            StringBuffer sb = new StringBuffer();
-            sb.append("axis {\n");
-            sb.append("name '" + axis.getName() + "'\n");
-            if (axis.notValues)
-                sb.append("notValues " + tokenize(axis.getValues()) + "\n");
-            else
-                sb.append("values " + tokenize(axis.getValues()) + "\n");
-            sb.append("}");
-            return sb.toString();
-        }
-    }
-
+  }
 }

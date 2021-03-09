@@ -24,22 +24,18 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-/**
- *
- * @author Andrew Bayer
- */
+/** @author Andrew Bayer */
 public interface ModelASTMarkerInterface {
-    @NonNull
-    String toGroovy();
+  @NonNull
+  String toGroovy();
 
-    @NonNull
-    Object toJSON();
+  @NonNull
+  Object toJSON();
 
-    void validate(@NonNull ModelValidator validator);
+  void validate(@NonNull ModelValidator validator);
 
-    void removeSourceLocation();
+  void removeSourceLocation();
 }

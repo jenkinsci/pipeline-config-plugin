@@ -24,6 +24,8 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
@@ -33,48 +35,45 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-/**
- * Stage condition based on object equality.
- */
+/** Stage condition based on object equality. */
 public class EqualsConditional extends DeclarativeStageConditional<EqualsConditional> {
-    private final Object expected;
-    private final Object actual;
+  private final Object expected;
+  private final Object actual;
 
-    @DataBoundConstructor
-    public EqualsConditional(Object expected, Object actual) {
-        this.expected = expected;
-        this.actual = actual;
+  @DataBoundConstructor
+  public EqualsConditional(Object expected, Object actual) {
+    this.expected = expected;
+    this.actual = actual;
+  }
+
+  public Object getActual() {
+    return actual;
+  }
+
+  public Object getExpected() {
+    return expected;
+  }
+
+  @Extension
+  @Symbol("equals")
+  public static class DescriptorImpl
+      extends DeclarativeStageConditionalDescriptor<EqualsConditional> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Execute the stage if two values are equal";
     }
 
-    public Object getActual() {
-        return actual;
+    @Override
+    public boolean inDirectiveGenerator() {
+      // TODO: Figure out how to get Stapler to not barf on form->instance for a String as the value
+      // but Object as the field type.
+      return false;
     }
 
-    public Object getExpected() {
-        return expected;
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      return ASTParserUtils.transformWhenContentToRuntimeAST(original);
     }
-
-    @Extension
-    @Symbol("equals")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EqualsConditional> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Execute the stage if two values are equal";
-        }
-
-        @Override
-        public boolean inDirectiveGenerator() {
-            // TODO: Figure out how to get Stapler to not barf on form->instance for a String as the value but Object as the field type.
-            return false;
-        }
-
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
-        }
-    }
+  }
 }

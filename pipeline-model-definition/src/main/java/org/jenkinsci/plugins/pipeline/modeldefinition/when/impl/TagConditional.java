@@ -25,6 +25,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import hudson.util.ListBoxModel;
 import org.apache.commons.lang.StringUtils;
@@ -38,68 +39,67 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.utils.Comparator;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-
 public class TagConditional extends DeclarativeStageConditional<TagConditional> {
-    private final String pattern;
-    private String comparator;
+  private final String pattern;
+  private String comparator;
 
-    @DataBoundConstructor
-    public TagConditional(String pattern) {
-        this.pattern = pattern;
+  @DataBoundConstructor
+  public TagConditional(String pattern) {
+    this.pattern = pattern;
+  }
+
+  public String getPattern() {
+    return pattern;
+  }
+
+  /**
+   * The {@link Comparator} to use.
+   *
+   * @return the name of the comparator or null if default.
+   */
+  public String getComparator() {
+    return comparator;
+  }
+
+  @DataBoundSetter
+  public void setComparator(String comparator) {
+    final Comparator c = Comparator.get(comparator, null);
+    // TODO validation
+    if (c != null) {
+      this.comparator = c.name();
+    } else {
+      this.comparator = null;
+    }
+  }
+
+  public boolean tagMatches(String actualTag) {
+    if (StringUtils.isEmpty(actualTag)) {
+      return false; // This is no tag build.
+    }
+    if (StringUtils.isEmpty(pattern) && StringUtils.isNotEmpty(actualTag)) {
+      return true; // This is a tag build and user doesn't care what the name is
     }
 
-    public String getPattern() {
-        return pattern;
+    Comparator c = Comparator.get(comparator, Comparator.GLOB);
+
+    return c.compare(pattern, actualTag);
+  }
+
+  @Extension
+  @Symbol("tag")
+  public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<TagConditional> {
+    @Override
+    public String getDisplayName() {
+      return "Execute this stage if the build is running against an SCM tag matching the given pattern";
     }
 
-    /**
-     * The {@link Comparator} to use.
-     * @return the name of the comparator or null if default.
-     */
-    public String getComparator() {
-        return comparator;
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      return ASTParserUtils.transformWhenContentToRuntimeAST(original);
     }
 
-    @DataBoundSetter
-    public void setComparator(String comparator) {
-        final Comparator c = Comparator.get(comparator, null);
-        //TODO validation
-        if (c != null) {
-            this.comparator = c.name();
-        } else {
-            this.comparator = null;
-        }
+    public ListBoxModel doFillComparatorItems() {
+      return Comparator.getSelectOptions(true, Comparator.GLOB);
     }
-
-    public boolean tagMatches(String actualTag) {
-        if (StringUtils.isEmpty(actualTag)) {
-            return false; //This is no tag build.
-        }
-        if (StringUtils.isEmpty(pattern) && StringUtils.isNotEmpty(actualTag)) {
-            return true; //This is a tag build and user doesn't care what the name is
-        }
-
-        Comparator c = Comparator.get(comparator, Comparator.GLOB);
-
-        return c.compare(pattern, actualTag);
-    }
-
-    @Extension
-    @Symbol("tag")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<TagConditional> {
-        @Override
-        public String getDisplayName() {
-            return "Execute this stage if the build is running against an SCM tag matching the given pattern";
-        }
-
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
-        }
-
-        public ListBoxModel doFillComparatorItems() {
-            return Comparator.getSelectOptions(true, Comparator.GLOB);
-        }
-    }
+  }
 }

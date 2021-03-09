@@ -24,84 +24,86 @@
 
 package org.jenkinsci.plugins.pipeline;
 
-import hudson.Extension;
-import org.jenkinsci.plugins.workflow.actions.TagsAction;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 
 @Extension
 public class StageStatus extends StageTagsMetadata {
 
-    public static final String TAG_NAME = "STAGE_STATUS";
+  public static final String TAG_NAME = "STAGE_STATUS";
 
-    @Override
-    public String getTagName() {
-        return TAG_NAME;
+  @Override
+  public String getTagName() {
+    return TAG_NAME;
+  }
+
+  @Override
+  public List<String> getPossibleValues() {
+    List<String> vals = new ArrayList<>();
+
+    // When there are other categories of status values, we'll add their methods too.
+    vals.addAll(getSkippedStageValues());
+    vals.add(getFailedAndContinued());
+
+    return vals;
+  }
+
+  public List<String> getSkippedStageValues() {
+    return skippedStages();
+  }
+
+  @NonNull
+  public static List<String> skippedStages() {
+    return Arrays.asList(
+        getSkippedForConditional(),
+        getSkippedForFailure(),
+        getSkippedForUnstable(),
+        getSkippedForRestart());
+  }
+
+  public static String getFailedAndContinued() {
+    return "FAILED_AND_CONTINUED";
+  }
+
+  public static String getSkippedForFailure() {
+    return "SKIPPED_FOR_FAILURE";
+  }
+
+  public static String getSkippedForUnstable() {
+    return "SKIPPED_FOR_UNSTABLE";
+  }
+
+  public static String getSkippedForConditional() {
+    return "SKIPPED_FOR_CONDITIONAL";
+  }
+
+  public static String getSkippedForRestart() {
+    return "SKIPPED_FOR_RESTART";
+  }
+
+  public static boolean isSkippedStage(@NonNull FlowNode node) {
+    TagsAction tagsAction = node.getPersistentAction(TagsAction.class);
+    if (tagsAction != null) {
+      String tagValue = tagsAction.getTagValue(TAG_NAME);
+      return tagValue != null && skippedStages().contains(tagValue);
     }
 
-    @Override
-    public List<String> getPossibleValues() {
-        List<String> vals = new ArrayList<>();
+    return false;
+  }
 
-        // When there are other categories of status values, we'll add their methods too.
-        vals.addAll(getSkippedStageValues());
-        vals.add(getFailedAndContinued());
-
-        return vals;
+  public static boolean isSkippedStageForReason(@NonNull FlowNode node, @NonNull String reason) {
+    if (skippedStages().contains(reason)) {
+      TagsAction tagsAction = node.getPersistentAction(TagsAction.class);
+      if (tagsAction != null) {
+        String tagValue = tagsAction.getTagValue(TAG_NAME);
+        return tagValue != null && tagValue.equals(reason);
+      }
     }
-
-    public List<String> getSkippedStageValues() {
-        return skippedStages();
-    }
-
-    @NonNull
-    public static List<String> skippedStages() {
-        return Arrays.asList(getSkippedForConditional(), getSkippedForFailure(), getSkippedForUnstable(),
-                getSkippedForRestart());
-    }
-
-    public static String getFailedAndContinued() {
-        return "FAILED_AND_CONTINUED";
-    }
-
-    public static String getSkippedForFailure() {
-        return "SKIPPED_FOR_FAILURE";
-    }
-
-    public static String getSkippedForUnstable() {
-        return "SKIPPED_FOR_UNSTABLE";
-    }
-
-    public static String getSkippedForConditional() {
-        return "SKIPPED_FOR_CONDITIONAL";
-    }
-
-    public static String getSkippedForRestart() {
-        return "SKIPPED_FOR_RESTART";
-    }
-
-    public static boolean isSkippedStage(@NonNull FlowNode node) {
-        TagsAction tagsAction = node.getPersistentAction(TagsAction.class);
-        if (tagsAction != null) {
-            String tagValue = tagsAction.getTagValue(TAG_NAME);
-            return tagValue != null && skippedStages().contains(tagValue);
-        }
-
-        return false;
-    }
-
-    public static boolean isSkippedStageForReason(@NonNull FlowNode node, @NonNull String reason) {
-        if (skippedStages().contains(reason)) {
-            TagsAction tagsAction = node.getPersistentAction(TagsAction.class);
-            if (tagsAction != null) {
-                String tagValue = tagsAction.getTagValue(TAG_NAME);
-                return tagValue != null && tagValue.equals(reason);
-            }
-        }
-        return false;
-    }
+    return false;
+  }
 }

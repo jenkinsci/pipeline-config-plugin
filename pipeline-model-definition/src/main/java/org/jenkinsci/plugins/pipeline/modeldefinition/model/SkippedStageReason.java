@@ -24,153 +24,152 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.model;
 
-import org.jenkinsci.plugins.pipeline.StageStatus;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.Serializable;
+import org.jenkinsci.plugins.pipeline.StageStatus;
 
 /**
- * Used to mark why a stage was skipped for internal purposes, allowing us to abstract away handling of skipped stages
- * without needing chains of if/else or cases to get the different behaviors.
+ * Used to mark why a stage was skipped for internal purposes, allowing us to abstract away handling
+ * of skipped stages without needing chains of if/else or cases to get the different behaviors.
  */
 public abstract class SkippedStageReason implements Serializable {
-    protected String stageName;
+  protected String stageName;
 
-    public SkippedStageReason(@NonNull String stageName) {
-        this.stageName = stageName;
+  public SkippedStageReason(@NonNull String stageName) {
+    this.stageName = stageName;
+  }
+
+  public boolean isNotExecutedNode() {
+    return false;
+  }
+
+  @NonNull
+  public abstract String getMessage();
+
+  @NonNull
+  public abstract String getStageStatus();
+
+  @NonNull
+  public abstract SkippedStageReason cloneWithNewStage(@NonNull String newStage);
+
+  @NonNull
+  public String getStageName() {
+    return stageName;
+  }
+
+  public static class Failure extends SkippedStageReason {
+    public Failure(@NonNull String stageName) {
+      super(stageName);
     }
 
+    @Override
+    @NonNull
+    public String getMessage() {
+      return Messages.SkippedStageReason_FAILURE_Message(stageName);
+    }
+
+    @Override
+    @NonNull
+    public String getStageStatus() {
+      return StageStatus.getSkippedForFailure();
+    }
+
+    @Override
+    @NonNull
+    public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
+      return new Failure(newStage);
+    }
+
+    private static final long serialVersionUID = 1L;
+  }
+
+  public static class Unstable extends SkippedStageReason {
+    public Unstable(@NonNull String stageName) {
+      super(stageName);
+    }
+
+    @Override
+    @NonNull
+    public String getMessage() {
+      return Messages.SkippedStageReason_UNSTABLE_Message(stageName);
+    }
+
+    @Override
+    @NonNull
+    public String getStageStatus() {
+      return StageStatus.getSkippedForUnstable();
+    }
+
+    @Override
+    @NonNull
+    public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
+      return new Unstable(newStage);
+    }
+
+    private static final long serialVersionUID = 1L;
+  }
+
+  public static class When extends SkippedStageReason {
+    public When(@NonNull String stageName) {
+      super(stageName);
+    }
+
+    @Override
+    @NonNull
+    public String getMessage() {
+      return Messages.SkippedStageReason_WHEN_Message(stageName);
+    }
+
+    @Override
+    @NonNull
+    public String getStageStatus() {
+      return StageStatus.getSkippedForConditional();
+    }
+
+    @Override
+    @NonNull
+    public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
+      return new When(newStage);
+    }
+
+    private static final long serialVersionUID = 1L;
+  }
+
+  public static class Restart extends SkippedStageReason {
+    private String restartedStage;
+
+    public Restart(@NonNull String stageName, @NonNull String restartedStage) {
+      super(stageName);
+      this.restartedStage = restartedStage;
+    }
+
+    public String getRestartedStage() {
+      return restartedStage;
+    }
+
+    @Override
     public boolean isNotExecutedNode() {
-        return false;
+      return true;
     }
 
+    @Override
     @NonNull
-    public abstract String getMessage();
+    public String getMessage() {
+      return Messages.SkippedStageReason_RESTART_Message(stageName, restartedStage);
+    }
 
+    @Override
     @NonNull
-    public abstract String getStageStatus();
+    public String getStageStatus() {
+      return StageStatus.getSkippedForRestart();
+    }
 
+    @Override
     @NonNull
-    public abstract SkippedStageReason cloneWithNewStage(@NonNull String newStage);
-
-    @NonNull
-    public String getStageName() {
-        return stageName;
+    public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
+      return new Restart(newStage, restartedStage);
     }
 
-    public static class Failure extends SkippedStageReason {
-        public Failure(@NonNull String stageName) {
-            super(stageName);
-        }
-
-        @Override
-        @NonNull
-        public String getMessage() {
-            return Messages.SkippedStageReason_FAILURE_Message(stageName);
-        }
-
-        @Override
-        @NonNull
-        public String getStageStatus() {
-            return StageStatus.getSkippedForFailure();
-        }
-
-        @Override
-        @NonNull
-        public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
-            return new Failure(newStage);
-        }
-
-        private static final long serialVersionUID = 1L;
-    }
-
-    public static class Unstable extends SkippedStageReason {
-        public Unstable(@NonNull String stageName) {
-            super(stageName);
-        }
-
-        @Override
-        @NonNull
-        public String getMessage() {
-            return Messages.SkippedStageReason_UNSTABLE_Message(stageName);
-        }
-
-        @Override
-        @NonNull
-        public String getStageStatus() {
-            return StageStatus.getSkippedForUnstable();
-        }
-
-        @Override
-        @NonNull
-        public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
-            return new Unstable(newStage);
-        }
-
-        private static final long serialVersionUID = 1L;
-    }
-
-    public static class When extends SkippedStageReason {
-        public When(@NonNull String stageName) {
-            super(stageName);
-        }
-
-        @Override
-        @NonNull
-        public String getMessage() {
-            return Messages.SkippedStageReason_WHEN_Message(stageName);
-        }
-
-        @Override
-        @NonNull
-        public String getStageStatus() {
-            return StageStatus.getSkippedForConditional();
-        }
-
-        @Override
-        @NonNull
-        public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
-            return new When(newStage);
-        }
-
-        private static final long serialVersionUID = 1L;
-    }
-
-    public static class Restart extends SkippedStageReason {
-        private String restartedStage;
-
-        public Restart(@NonNull String stageName, @NonNull String restartedStage) {
-            super(stageName);
-            this.restartedStage = restartedStage;
-        }
-
-        public String getRestartedStage() {
-            return restartedStage;
-        }
-
-        @Override
-        public boolean isNotExecutedNode() {
-            return true;
-        }
-
-        @Override
-        @NonNull
-        public String getMessage() {
-            return Messages.SkippedStageReason_RESTART_Message(stageName, restartedStage);
-        }
-
-        @Override
-        @NonNull
-        public String getStageStatus() {
-            return StageStatus.getSkippedForRestart();
-        }
-
-        @Override
-        @NonNull
-        public SkippedStageReason cloneWithNewStage(@NonNull String newStage) {
-            return new Restart(newStage, restartedStage);
-        }
-
-        private static final long serialVersionUID = 1L;
-    }
+    private static final long serialVersionUID = 1L;
+  }
 }

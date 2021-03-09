@@ -26,47 +26,46 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.credentials.impl;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.*;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.*;
-
 @Extension
-public class UsernamePasswordHandler extends CredentialsBindingHandler<StandardUsernamePasswordCredentials> {
-    @NonNull
-    @Override
-    public List<MultiBinding<StandardUsernamePasswordCredentials>> toBindings(String varName, String credentialsId) {
-        List<MultiBinding<StandardUsernamePasswordCredentials>> bindings = new ArrayList<>();
-        bindings.add(new UsernamePasswordBinding(varName, credentialsId));
-        bindings.add(new UsernamePasswordMultiBinding(varName + "_USR",
-                varName + "_PSW",
-                credentialsId));
-        return bindings;
-    }
+public class UsernamePasswordHandler
+    extends CredentialsBindingHandler<StandardUsernamePasswordCredentials> {
+  @NonNull
+  @Override
+  public List<MultiBinding<StandardUsernamePasswordCredentials>> toBindings(
+      String varName, String credentialsId) {
+    List<MultiBinding<StandardUsernamePasswordCredentials>> bindings = new ArrayList<>();
+    bindings.add(new UsernamePasswordBinding(varName, credentialsId));
+    bindings.add(
+        new UsernamePasswordMultiBinding(varName + "_USR", varName + "_PSW", credentialsId));
+    return bindings;
+  }
 
-    @NonNull
-    @Override
-    public Class<? extends StandardCredentials> type() {
-        return StandardUsernamePasswordCredentials.class;
-    }
+  @NonNull
+  @Override
+  public Class<? extends StandardCredentials> type() {
+    return StandardUsernamePasswordCredentials.class;
+  }
 
-    @NonNull
-    @Override
-    public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("$class", UsernamePasswordBinding.class.getName());
-        map.put("variable", new EnvVarResolver());
-        map.put("credentialsId", credentialsId);
-        Map<String, Object> map2 = new HashMap<>();
-        map2.put("$class", UsernamePasswordMultiBinding.class.getName());
-        map2.put("usernameVariable", new EnvVarResolver("%s_USR"));
-        map2.put("passwordVariable", new EnvVarResolver("%s_PSW"));
-        map2.put("credentialsId", credentialsId);
-        return Arrays.asList(map, map2);
-    }
-
+  @NonNull
+  @Override
+  public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
+    Map<String, Object> map = new HashMap<>();
+    map.put("$class", UsernamePasswordBinding.class.getName());
+    map.put("variable", new EnvVarResolver());
+    map.put("credentialsId", credentialsId);
+    Map<String, Object> map2 = new HashMap<>();
+    map2.put("$class", UsernamePasswordMultiBinding.class.getName());
+    map2.put("usernameVariable", new EnvVarResolver("%s_USR"));
+    map2.put("passwordVariable", new EnvVarResolver("%s_PSW"));
+    map2.put("credentialsId", credentialsId);
+    return Arrays.asList(map, map2);
+  }
 }

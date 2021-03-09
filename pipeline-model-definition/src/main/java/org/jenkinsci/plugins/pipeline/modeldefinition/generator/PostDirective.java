@@ -24,79 +24,79 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import java.util.*;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.BuildCondition;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.*;
-
 public class PostDirective extends AbstractDirective<PostDirective> {
-    private final List<String> conditions = new ArrayList<>();
+  private final List<String> conditions = new ArrayList<>();
 
-    @DataBoundConstructor
-    public PostDirective(List<String> conditions) {
-        if (conditions != null) {
-            this.conditions.addAll(conditions);
-        }
+  @DataBoundConstructor
+  public PostDirective(List<String> conditions) {
+    if (conditions != null) {
+      this.conditions.addAll(conditions);
+    }
+  }
+
+  public List<String> getConditions() {
+    return conditions;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<PostDirective> {
+    @Override
+    @NonNull
+    public String getName() {
+      return "post";
     }
 
-    public List<String> getConditions() {
-        return conditions;
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Post Stage or Build Conditions";
     }
 
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<PostDirective> {
-        @Override
-        @NonNull
-        public String getName() {
-            return "post";
-        }
-
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Post Stage or Build Conditions";
-        }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            return Collections.emptyList();
-        }
-
-        @NonNull
-        public Set<Map.Entry<String,String>> getPossibleConditions() {
-            Map<String,String> conditionMap = new HashMap<>();
-
-            for (BuildCondition bc : BuildCondition.all()) {
-                Set<String> symbols = SymbolLookup.getSymbolValue(bc);
-                if (!symbols.isEmpty()) {
-                    conditionMap.put(symbols.iterator().next(), bc.getDescription());
-                }
-            }
-
-            return conditionMap.entrySet();
-        }
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull PostDirective directive) {
-            StringBuilder result = new StringBuilder("post {\n");
-            if (!directive.getConditions().isEmpty()) {
-                for (String bc : directive.getConditions()) {
-                    result.append(bc).append(" {\n");
-                    result.append("// One or more steps need to be included within each condition's block.\n");
-                    result.append("}\n");
-                }
-            } else {
-                result.append("// No post conditions specified\n");
-            }
-            result.append("}\n");
-
-            return result.toString();
-        }
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      return Collections.emptyList();
     }
+
+    @NonNull
+    public Set<Map.Entry<String, String>> getPossibleConditions() {
+      Map<String, String> conditionMap = new HashMap<>();
+
+      for (BuildCondition bc : BuildCondition.all()) {
+        Set<String> symbols = SymbolLookup.getSymbolValue(bc);
+        if (!symbols.isEmpty()) {
+          conditionMap.put(symbols.iterator().next(), bc.getDescription());
+        }
+      }
+
+      return conditionMap.entrySet();
+    }
+
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull PostDirective directive) {
+      StringBuilder result = new StringBuilder("post {\n");
+      if (!directive.getConditions().isEmpty()) {
+        for (String bc : directive.getConditions()) {
+          result.append(bc).append(" {\n");
+          result.append(
+              "// One or more steps need to be included within each condition's block.\n");
+          result.append("}\n");
+        }
+      } else {
+        result.append("// No post conditions specified\n");
+      }
+      result.append("}\n");
+
+      return result.toString();
+    }
+  }
 }

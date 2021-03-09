@@ -24,8 +24,13 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
@@ -34,125 +39,123 @@ import org.jenkinsci.plugins.structs.describable.UninstantiatedDescribable;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class WhenDirective extends AbstractDirective<WhenDirective> {
-    private DeclarativeStageConditional conditional;
-    private boolean beforeAgent;
-    private boolean beforeInput;
-    private boolean beforeOptions;
+  private DeclarativeStageConditional conditional;
+  private boolean beforeAgent;
+  private boolean beforeInput;
+  private boolean beforeOptions;
 
-    @DataBoundConstructor
-    public WhenDirective(DeclarativeStageConditional conditional, boolean beforeAgent, boolean beforeInput, boolean beforeOptions) {
-        this.conditional = conditional;
-        this.beforeAgent = beforeAgent;
-        this.beforeInput = beforeInput;
-        this.beforeOptions = beforeOptions;
+  @DataBoundConstructor
+  public WhenDirective(
+      DeclarativeStageConditional conditional,
+      boolean beforeAgent,
+      boolean beforeInput,
+      boolean beforeOptions) {
+    this.conditional = conditional;
+    this.beforeAgent = beforeAgent;
+    this.beforeInput = beforeInput;
+    this.beforeOptions = beforeOptions;
+  }
+
+  public DeclarativeStageConditional getConditional() {
+    return conditional;
+  }
+
+  public boolean isBeforeAgent() {
+    return beforeAgent;
+  }
+
+  public boolean isBeforeInput() {
+    return beforeInput;
+  }
+
+  public boolean isBeforeOptions() {
+    return beforeOptions;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<WhenDirective> {
+    @Override
+    @NonNull
+    public String getName() {
+      return "when";
     }
 
-    public DeclarativeStageConditional getConditional() {
-        return conditional;
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "When Condition";
     }
 
-    public boolean isBeforeAgent() {
-        return beforeAgent;
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      // For some reason, returning forGenerator directly won't cast from
+      // DeclarativeStageConditionalDescriptor to Descriptor. Fun.
+      return new ArrayList<>(DeclarativeStageConditionalDescriptor.forGenerator());
     }
 
-    public boolean isBeforeInput() {
-        return beforeInput;
-    }
-
-    public boolean isBeforeOptions() {
-        return beforeOptions;
-    }
-
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<WhenDirective> {
-        @Override
-        @NonNull
-        public String getName() {
-            return "when";
-        }
-
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "When Condition";
-        }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            // For some reason, returning forGenerator directly won't cast from DeclarativeStageConditionalDescriptor to Descriptor. Fun.
-            return new ArrayList<>(DeclarativeStageConditionalDescriptor.forGenerator());
-        }
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull WhenDirective directive) {
-            if (directive.conditional != null) {
-                UninstantiatedDescribable ud = UninstantiatedDescribable.from(directive.conditional);
-                DescribableModel<? extends DeclarativeStageConditional> model = ud.getModel();
-                if (model != null) {
-                    Map<String,Object> args = new HashMap<>();
-                    // Hack to null out non-required fields for UI prettiness.
-                    for (String argKey : ud.getArguments().keySet()) {
-                        DescribableParameter p = model.getParameter(argKey);
-                        if (p == null ||
-                                p.isRequired() ||
-                                !(String.class.equals(p.getErasedType())) ||
-                                !ud.getArguments().get(argKey).equals("")) {
-                            args.put(argKey, ud.getArguments().get(argKey));
-                        }
-                    }
-
-                    StringBuilder result = new StringBuilder();
-                    result.append("when {\n");
-
-                    try {
-                        result.append(conditionalToGroovy(model.instantiate(args)));
-                    } catch (Exception e) {
-                        result.append("// ERROR TRANSLATING CONDITIONAL: ").append(e).append("\n");
-                    }
-
-                    if (directive.isBeforeOptions()) {
-                        result.append("beforeOptions true\n");
-                    }
-                    if (directive.isBeforeInput()) {
-                        result.append("beforeInput true\n");
-                    }
-                    if (directive.isBeforeAgent()) {
-                        result.append("beforeAgent true\n");
-                    }
-                    result.append("}\n");
-                    return result.toString();
-                }
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull WhenDirective directive) {
+      if (directive.conditional != null) {
+        UninstantiatedDescribable ud = UninstantiatedDescribable.from(directive.conditional);
+        DescribableModel<? extends DeclarativeStageConditional> model = ud.getModel();
+        if (model != null) {
+          Map<String, Object> args = new HashMap<>();
+          // Hack to null out non-required fields for UI prettiness.
+          for (String argKey : ud.getArguments().keySet()) {
+            DescribableParameter p = model.getParameter(argKey);
+            if (p == null
+                || p.isRequired()
+                || !(String.class.equals(p.getErasedType()))
+                || !ud.getArguments().get(argKey).equals("")) {
+              args.put(argKey, ud.getArguments().get(argKey));
             }
+          }
 
-            return "// No valid when condition defined\n";
+          StringBuilder result = new StringBuilder();
+          result.append("when {\n");
+
+          try {
+            result.append(conditionalToGroovy(model.instantiate(args)));
+          } catch (Exception e) {
+            result.append("// ERROR TRANSLATING CONDITIONAL: ").append(e).append("\n");
+          }
+
+          if (directive.isBeforeOptions()) {
+            result.append("beforeOptions true\n");
+          }
+          if (directive.isBeforeInput()) {
+            result.append("beforeInput true\n");
+          }
+          if (directive.isBeforeAgent()) {
+            result.append("beforeAgent true\n");
+          }
+          result.append("}\n");
+          return result.toString();
         }
+      }
 
-
-        @NonNull
-        private String conditionalToGroovy(@NonNull DeclarativeStageConditional<?> conditional) {
-            DeclarativeStageConditionalDescriptor descriptor = conditional.getDescriptor();
-
-            if (descriptor.getAllowedChildrenCount() == 0) {
-                return Snippetizer.object2Groovy(UninstantiatedDescribable.from(conditional)) + "\n";
-            } else {
-                StringBuilder result = new StringBuilder();
-                result.append(descriptor.getName()).append(" {\n");
-
-                for (DeclarativeStageConditional c : conditional.getChildren()) {
-                    result.append(conditionalToGroovy(c));
-                }
-                result.append("}\n");
-                return result.toString();
-            }
-        }
+      return "// No valid when condition defined\n";
     }
+
+    @NonNull
+    private String conditionalToGroovy(@NonNull DeclarativeStageConditional<?> conditional) {
+      DeclarativeStageConditionalDescriptor descriptor = conditional.getDescriptor();
+
+      if (descriptor.getAllowedChildrenCount() == 0) {
+        return Snippetizer.object2Groovy(UninstantiatedDescribable.from(conditional)) + "\n";
+      } else {
+        StringBuilder result = new StringBuilder();
+        result.append(descriptor.getName()).append(" {\n");
+
+        for (DeclarativeStageConditional c : conditional.getChildren()) {
+          result.append(conditionalToGroovy(c));
+        }
+        result.append("}\n");
+        return result.toString();
+      }
+    }
+  }
 }

@@ -23,72 +23,70 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import java.util.ArrayList;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.List;
-
 public class ExcludeDirective extends AbstractDirective<ExcludeDirective> {
 
-    private List<AxisDirective> exclude;
+  private List<AxisDirective> exclude;
 
-    @DataBoundConstructor
-    public ExcludeDirective(List<AxisDirective> exclude) {
-        this.exclude = exclude;
+  @DataBoundConstructor
+  public ExcludeDirective(List<AxisDirective> exclude) {
+    this.exclude = exclude;
+  }
+
+  public List<AxisDirective> getExclude() {
+    return exclude;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<ExcludeDirective> {
+
+    @NonNull
+    @Override
+    public boolean isTopLevel() {
+      return false;
     }
 
-    public List<AxisDirective> getExclude() {
-        return exclude;
+    @Override
+    @NonNull
+    public String getName() {
+      return "exclude";
     }
 
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<ExcludeDirective> {
-
-        @NonNull
-        @Override
-        public boolean isTopLevel() {
-            return false;
-        }
-
-        @Override
-        @NonNull
-        public String getName() {
-            return "exclude";
-        }
-
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Exclude";
-        }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            List<Descriptor> descriptors = new ArrayList<>();
-            descriptors.add(Jenkins.get().getDescriptorByType(AxisDirective.DescriptorImpl.class));
-
-            return descriptors;
-        }
-
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull ExcludeDirective axes) {
-            StringBuilder result = new StringBuilder("exclude {\n");
-            if (axes.exclude != null) {
-                axes.exclude.stream().forEach(excludes -> {
-                            result.append(excludes.toGroovy(false)).append("\n");
-                        }
-                );
-            }
-            result.append("}");
-            return result.toString();
-        }
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Exclude";
     }
 
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      List<Descriptor> descriptors = new ArrayList<>();
+      descriptors.add(Jenkins.get().getDescriptorByType(AxisDirective.DescriptorImpl.class));
+
+      return descriptors;
+    }
+
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull ExcludeDirective axes) {
+      StringBuilder result = new StringBuilder("exclude {\n");
+      if (axes.exclude != null) {
+        axes.exclude.stream()
+            .forEach(
+                excludes -> {
+                  result.append(excludes.toGroovy(false)).append("\n");
+                });
+      }
+      result.append("}");
+      return result.toString();
+    }
+  }
 }

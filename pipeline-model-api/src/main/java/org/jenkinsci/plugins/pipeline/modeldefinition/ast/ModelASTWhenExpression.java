@@ -25,20 +25,18 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
+/** Code expression {@link ModelASTStage} will be executed or not. */
+public class ModelASTWhenExpression extends AbstractModelASTCodeBlock
+    implements ModelASTWhenContent {
+  public ModelASTWhenExpression(Object sourceLocation) {
+    super(sourceLocation, "expression");
+  }
 
-/**
- * Code expression {@link ModelASTStage} will be executed or not.
- */
-public class ModelASTWhenExpression extends AbstractModelASTCodeBlock implements ModelASTWhenContent {
-    public ModelASTWhenExpression(Object sourceLocation) {
-        super(sourceLocation, "expression");
-    }
-
-    @Override
-    public void validate(@NonNull ModelValidator validator) {
-        validator.validateElement(this);
-    }
+  @Override
+  public void validate(@NonNull ModelValidator validator) {
+    validator.validateElement(this);
+  }
 }

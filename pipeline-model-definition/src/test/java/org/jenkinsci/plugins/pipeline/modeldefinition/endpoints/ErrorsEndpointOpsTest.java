@@ -23,9 +23,13 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.endpoints;
 
+import static org.junit.Assert.*;
+
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
+import java.net.URL;
+import java.util.Collections;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.junit.Test;
@@ -33,118 +37,164 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.net.URL;
-import java.util.Collections;
-
-import static org.junit.Assert.*;
-
 @RunWith(Parameterized.class)
 public class ErrorsEndpointOpsTest extends AbstractModelDefTest {
-    private String configName;
-    private String expectedError;
+  private String configName;
+  private String expectedError;
 
-    public ErrorsEndpointOpsTest(String configName, String expectedError) {
-        this.configName = configName;
-        this.expectedError = expectedError;
+  public ErrorsEndpointOpsTest(String configName, String expectedError) {
+    this.configName = configName;
+    this.expectedError = expectedError;
+  }
+
+  @Parameterized.Parameters(name = "Name: {0}")
+  public static Iterable<Object[]> generateParameters() {
+    return AbstractModelDefTest.runtimeConfigsWithErrors();
+  }
+
+  @Test
+  public void testFailedValidateJson() throws Exception {
+    JenkinsRule.WebClient wc = j.createWebClient();
+    WebRequest req =
+        new WebRequest(
+            new URL(
+                wc.getContextPath()
+                    + ModelConverterAction.PIPELINE_CONVERTER_URL
+                    + "/validateJson"),
+            HttpMethod.POST);
+    String simpleJson = fileContentsFromResources("json/errors/" + configName + ".json");
+
+    assertNotNull(simpleJson);
+
+    NameValuePair pair = new NameValuePair("json", simpleJson);
+    req.setRequestParameters(Collections.singletonList(pair));
+
+    String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+    assertNotNull(rawResult);
+
+    JSONObject result = JSONObject.fromObject(rawResult);
+    // TODO: Change this when we get proper JSON errors causing HTTP error codes
+    assertEquals(
+        "Full result doesn't include status - " + result.toString(2),
+        "ok",
+        result.getString("status"));
+    JSONObject resultData = result.getJSONObject("data");
+    assertNotNull(resultData);
+    assertEquals(
+        "Result wasn't a failure - " + result.toString(2),
+        "failure",
+        resultData.getString("result"));
+
+    assertTrue(
+        "Errors array ("
+            + resultData.getJSONArray("errors").toString(2)
+            + ") didn't contain expected error '"
+            + expectedError
+            + "'",
+        foundExpectedErrorInJSON(resultData.getJSONArray("errors"), expectedError));
+  }
+
+  @Test
+  public void testFailedValidateJenkinsfile() throws Exception {
+    final String rawJenkinsfile =
+        fileContentsFromResources("errors/" + configName + ".groovy", true);
+
+    if (rawJenkinsfile != null) {
+
+      JenkinsRule.WebClient wc = j.createWebClient();
+      WebRequest req =
+          new WebRequest(
+              new URL(
+                  wc.getContextPath()
+                      + ModelConverterAction.PIPELINE_CONVERTER_URL
+                      + "/validateJenkinsfile"),
+              HttpMethod.POST);
+
+      assertNotNull(rawJenkinsfile);
+
+      NameValuePair pair = new NameValuePair("jenkinsfile", rawJenkinsfile);
+      req.setRequestParameters(Collections.singletonList(pair));
+
+      String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+      assertNotNull(rawResult);
+
+      JSONObject result = JSONObject.fromObject(rawResult);
+      // TODO: Change this when we get proper JSON errors causing HTTP error codes
+      assertEquals(
+          "Full result doesn't include status - " + result.toString(2),
+          "ok",
+          result.getString("status"));
+      JSONObject resultData = result.getJSONObject("data");
+      assertNotNull(resultData);
+      assertEquals(
+          "Result wasn't a failure - " + result.toString(2),
+          "failure",
+          resultData.getString("result"));
     }
+  }
 
-    @Parameterized.Parameters(name="Name: {0}")
-    public static Iterable<Object[]> generateParameters() {
-        return AbstractModelDefTest.runtimeConfigsWithErrors();
-    }
+  @Test
+  public void testFailedToJenkinsfile() throws Exception {
+    JenkinsRule.WebClient wc = j.createWebClient();
+    WebRequest req =
+        new WebRequest(
+            new URL(
+                wc.getContextPath()
+                    + ModelConverterAction.PIPELINE_CONVERTER_URL
+                    + "/toJenkinsfile"),
+            HttpMethod.POST);
+    String simpleJson = fileContentsFromResources("json/errors/" + configName + ".json");
 
-    @Test
-    public void testFailedValidateJson() throws Exception {
-        JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJson"), HttpMethod.POST);
-        String simpleJson = fileContentsFromResources("json/errors/" + configName + ".json");
+    assertNotNull(simpleJson);
 
-        assertNotNull(simpleJson);
+    NameValuePair pair = new NameValuePair("json", simpleJson);
+    req.setRequestParameters(Collections.singletonList(pair));
 
-        NameValuePair pair = new NameValuePair("json", simpleJson);
-        req.setRequestParameters(Collections.singletonList(pair));
+    String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+    assertNotNull(rawResult);
 
-        String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
-        assertNotNull(rawResult);
+    JSONObject result = JSONObject.fromObject(rawResult);
+    // TODO: Change this when we get proper JSON errors causing HTTP error codes
+    assertEquals(
+        "Full result doesn't include status - " + result.toString(2),
+        "ok",
+        result.getString("status"));
+    JSONObject resultData = result.getJSONObject("data");
+    assertNotNull(resultData);
+    assertEquals(
+        "Result wasn't a failure - " + result.toString(2),
+        "failure",
+        resultData.getString("result"));
+  }
 
-        JSONObject result = JSONObject.fromObject(rawResult);
-        // TODO: Change this when we get proper JSON errors causing HTTP error codes
-        assertEquals("Full result doesn't include status - " + result.toString(2), "ok", result.getString("status"));
-        JSONObject resultData = result.getJSONObject("data");
-        assertNotNull(resultData);
-        assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
+  @Test
+  public void testFailedToJson() throws Exception {
+    JenkinsRule.WebClient wc = j.createWebClient();
+    WebRequest req =
+        new WebRequest(
+            new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJson"),
+            HttpMethod.POST);
+    String initialGroovy = fileContentsFromResources("errors/" + configName + ".groovy", true);
 
-        assertTrue("Errors array (" + resultData.getJSONArray("errors").toString(2) + ") didn't contain expected error '" + expectedError + "'",
-                foundExpectedErrorInJSON(resultData.getJSONArray("errors"), expectedError));
-    }
+    assertNotNull(initialGroovy);
 
-    @Test
-    public void testFailedValidateJenkinsfile() throws Exception {
-        final String rawJenkinsfile = fileContentsFromResources("errors/" + configName + ".groovy", true);
+    NameValuePair pair = new NameValuePair("jenkinsfile", initialGroovy);
+    req.setRequestParameters(Collections.singletonList(pair));
 
-        if (rawJenkinsfile != null) {
+    String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
+    assertNotNull(rawResult);
 
-            JenkinsRule.WebClient wc = j.createWebClient();
-            WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/validateJenkinsfile"), HttpMethod.POST);
-
-            assertNotNull(rawJenkinsfile);
-
-            NameValuePair pair = new NameValuePair("jenkinsfile", rawJenkinsfile);
-            req.setRequestParameters(Collections.singletonList(pair));
-
-            String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
-            assertNotNull(rawResult);
-
-            JSONObject result = JSONObject.fromObject(rawResult);
-            // TODO: Change this when we get proper JSON errors causing HTTP error codes
-            assertEquals("Full result doesn't include status - " + result.toString(2), "ok", result.getString("status"));
-            JSONObject resultData = result.getJSONObject("data");
-            assertNotNull(resultData);
-            assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
-        }
-    }
-
-    @Test
-    public void testFailedToJenkinsfile() throws Exception {
-        JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJenkinsfile"), HttpMethod.POST);
-        String simpleJson = fileContentsFromResources("json/errors/" + configName + ".json");
-
-        assertNotNull(simpleJson);
-
-        NameValuePair pair = new NameValuePair("json", simpleJson);
-        req.setRequestParameters(Collections.singletonList(pair));
-
-        String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
-        assertNotNull(rawResult);
-
-        JSONObject result = JSONObject.fromObject(rawResult);
-        // TODO: Change this when we get proper JSON errors causing HTTP error codes
-        assertEquals("Full result doesn't include status - " + result.toString(2), "ok", result.getString("status"));
-        JSONObject resultData = result.getJSONObject("data");
-        assertNotNull(resultData);
-        assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
-    }
-
-    @Test
-    public void testFailedToJson() throws Exception {
-        JenkinsRule.WebClient wc = j.createWebClient();
-        WebRequest req = new WebRequest(new URL(wc.getContextPath() + ModelConverterAction.PIPELINE_CONVERTER_URL + "/toJson"), HttpMethod.POST);
-        String initialGroovy = fileContentsFromResources("errors/" + configName + ".groovy", true);
-
-        assertNotNull(initialGroovy);
-
-        NameValuePair pair = new NameValuePair("jenkinsfile", initialGroovy);
-        req.setRequestParameters(Collections.singletonList(pair));
-
-        String rawResult = wc.getPage(req).getWebResponse().getContentAsString();
-        assertNotNull(rawResult);
-
-        JSONObject result = JSONObject.fromObject(rawResult);
-        // TODO: Change this when we get proper JSON errors causing HTTP error codes
-        assertEquals("Full result doesn't include status - " + result.toString(2), "ok", result.getString("status"));
-        JSONObject resultData = result.getJSONObject("data");
-        assertNotNull(resultData);
-        assertEquals("Result wasn't a failure - " + result.toString(2), "failure", resultData.getString("result"));
-    }
+    JSONObject result = JSONObject.fromObject(rawResult);
+    // TODO: Change this when we get proper JSON errors causing HTTP error codes
+    assertEquals(
+        "Full result doesn't include status - " + result.toString(2),
+        "ok",
+        result.getString("status"));
+    JSONObject resultData = result.getJSONObject("data");
+    assertNotNull(resultData);
+    assertEquals(
+        "Result wasn't a failure - " + result.toString(2),
+        "failure",
+        resultData.getString("result"));
+  }
 }

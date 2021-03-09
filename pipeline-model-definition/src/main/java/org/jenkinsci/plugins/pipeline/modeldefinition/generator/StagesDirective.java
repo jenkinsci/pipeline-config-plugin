@@ -24,59 +24,58 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import java.util.ArrayList;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.List;
-
 public class StagesDirective extends AbstractDirective<StagesDirective> {
-    private List<StageDirective> stages;
+  private List<StageDirective> stages;
 
-    @DataBoundConstructor
-    public StagesDirective(List<StageDirective> stages) {
-        this.stages = stages;
+  @DataBoundConstructor
+  public StagesDirective(List<StageDirective> stages) {
+    this.stages = stages;
+  }
+
+  public List<StageDirective> getStages() {
+    return stages;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<StagesDirective> {
+    @Override
+    @NonNull
+    public String getName() {
+      return "stages";
     }
 
-    public List<StageDirective> getStages() {
-        return stages;
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Stages";
     }
 
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<StagesDirective> {
-        @Override
-        @NonNull
-        public String getName() {
-            return "stages";
-        }
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      List<Descriptor> descriptors = new ArrayList<>();
+      descriptors.add(Jenkins.get().getDescriptorByType(StageDirective.DescriptorImpl.class));
 
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Stages";
-        }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            List<Descriptor> descriptors = new ArrayList<>();
-            descriptors.add(Jenkins.get().getDescriptorByType(StageDirective.DescriptorImpl.class));
-
-            return descriptors;
-        }
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull StagesDirective stages) {
-            StringBuilder result = new StringBuilder("stages {\n" );
-            if( stages.stages != null){
-                stages.stages.stream().forEach( a -> result.append(a.toGroovy(false)).append("\n"));
-            }
-            result.append("}\n");
-            return result.toString();
-        }
+      return descriptors;
     }
+
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull StagesDirective stages) {
+      StringBuilder result = new StringBuilder("stages {\n");
+      if (stages.stages != null) {
+        stages.stages.stream().forEach(a -> result.append(a.toGroovy(false)).append("\n"));
+      }
+      result.append("}\n");
+      return result.toString();
+    }
+  }
 }

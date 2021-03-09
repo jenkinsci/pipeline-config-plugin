@@ -24,9 +24,9 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionPoint;
 import java.util.Map;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptDescribable;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
@@ -34,74 +34,77 @@ import org.jenkinsci.plugins.workflow.cps.CpsScript;
 import org.jenkinsci.plugins.workflow.cps.CpsThread;
 
 /**
- * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative Pipelines.
+ * Implementations for {@link DeclarativeAgentDescriptor} - pluggable agent backends for Declarative
+ * Pipelines.
  *
  * @author Andrew Bayer
  */
-public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>> extends WithScriptDescribable<A> implements ExtensionPoint {
-    protected boolean inStage;
-    protected boolean doCheckout;
-    protected String subdirectory;
+public abstract class DeclarativeAgent<A extends DeclarativeAgent<A>>
+    extends WithScriptDescribable<A> implements ExtensionPoint {
+  protected boolean inStage;
+  protected boolean doCheckout;
+  protected String subdirectory;
 
-    @Override
-    public WithScriptScript getScript(CpsScript cpsScript) throws Exception {
-        CpsThread c = CpsThread.current();
-        if (c == null)
-            throw new IllegalStateException("Expected to be called from CpsThread");
+  @Override
+  public WithScriptScript getScript(CpsScript cpsScript) throws Exception {
+    CpsThread c = CpsThread.current();
+    if (c == null) throw new IllegalStateException("Expected to be called from CpsThread");
 
-        cpsScript.getClass().getClassLoader().loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript");
+    cpsScript
+        .getClass()
+        .getClassLoader()
+        .loadClass("org.jenkinsci.plugins.pipeline.modeldefinition.agent.CheckoutScript");
 
-        return super.getScript(cpsScript);
+    return super.getScript(cpsScript);
+  }
+
+  public void setInStage(boolean inStage) {
+    this.inStage = inStage;
+  }
+
+  public boolean isInStage() {
+    return inStage;
+  }
+
+  public void initialize(Map<String, DeclarativeOption> options, boolean explicitAgentInStage) {}
+
+  public boolean reuseRootAgent(Map<String, DeclarativeOption> options) {
+    return false;
+  }
+
+  public void setDoCheckout(boolean doCheckout) {
+    this.doCheckout = doCheckout;
+  }
+
+  public boolean isDoCheckout() {
+    return doCheckout;
+  }
+
+  public void setSubdirectory(String subdirectory) {
+    this.subdirectory = subdirectory;
+  }
+
+  public String getSubdirectory() {
+    return subdirectory;
+  }
+
+  public void copyFlags(@NonNull DeclarativeAgent a) {
+    setInStage(a.isInStage());
+    setDoCheckout(a.isDoCheckout());
+    setSubdirectory(a.getSubdirectory());
+  }
+
+  public boolean hasScmContext(CpsScript script) {
+    try {
+      script.getProperty("scm");
+      return true;
+    } catch (Exception e) {
+      return false;
     }
+  }
 
-    public void setInStage(boolean inStage) {
-        this.inStage = inStage;
-    }
-
-    public boolean isInStage() {
-        return inStage;
-    }
-
-    public void initialize(Map<String, DeclarativeOption> options, boolean explicitAgentInStage) {}
-
-    public boolean reuseRootAgent(Map<String, DeclarativeOption> options) {
-        return false;
-    }
-
-    public void setDoCheckout(boolean doCheckout) {
-        this.doCheckout = doCheckout;
-    }
-
-    public boolean isDoCheckout() {
-        return doCheckout;
-    }
-
-    public void setSubdirectory(String subdirectory) {
-        this.subdirectory = subdirectory;
-    }
-
-    public String getSubdirectory() {
-        return subdirectory;
-    }
-
-    public void copyFlags(@NonNull DeclarativeAgent a) {
-        setInStage(a.isInStage());
-        setDoCheckout(a.isDoCheckout());
-        setSubdirectory(a.getSubdirectory());
-    }
-
-    public boolean hasScmContext(CpsScript script) {
-        try {
-            script.getProperty("scm");
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public DeclarativeAgentDescriptor getDescriptor() {
-        return (DeclarativeAgentDescriptor) super.getDescriptor();
-    }
-
+  @Override
+  public DeclarativeAgentDescriptor getDescriptor() {
+    return (DeclarativeAgentDescriptor) super.getDescriptor();
+  }
 }

@@ -25,109 +25,110 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
+import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
-/**
- * If {@link ModelASTStage} will be executed or not.
- */
+/** If {@link ModelASTStage} will be executed or not. */
 public class ModelASTWhen extends ModelASTElement {
 
-    private List<ModelASTWhenContent> conditions = new ArrayList<>();
+  private List<ModelASTWhenContent> conditions = new ArrayList<>();
 
-    private Boolean beforeAgent;
+  private Boolean beforeAgent;
 
-    private Boolean beforeInput;
+  private Boolean beforeInput;
 
-    private Boolean beforeOptions;
+  private Boolean beforeOptions;
 
-    public ModelASTWhen(Object sourceLocation) {
-        super(sourceLocation);
+  public ModelASTWhen(Object sourceLocation) {
+    super(sourceLocation);
+  }
+
+  public List<ModelASTWhenContent> getConditions() {
+    return conditions;
+  }
+
+  public void setConditions(List<ModelASTWhenContent> conditions) {
+    this.conditions = conditions;
+  }
+
+  public Boolean getBeforeAgent() {
+    return beforeAgent;
+  }
+
+  public void setBeforeAgent(Boolean beforeAgent) {
+    this.beforeAgent = beforeAgent;
+  }
+
+  public Boolean getBeforeInput() {
+    return beforeInput;
+  }
+
+  public void setBeforeInput(Boolean beforeInput) {
+    this.beforeInput = beforeInput;
+  }
+
+  public Boolean getBeforeOptions() {
+    return beforeOptions;
+  }
+
+  public void setBeforeOptions(Boolean beforeOptions) {
+    this.beforeOptions = beforeOptions;
+  }
+
+  @Override
+  @NonNull
+  public Object toJSON() {
+    return new JSONObject()
+        .accumulate("conditions", toJSONArray(conditions))
+        .elementOpt("beforeAgent", beforeAgent)
+        .elementOpt("beforeInput", beforeInput)
+        .elementOpt("beforeOptions", beforeOptions);
+  }
+
+  @Override
+  @NonNull
+  public String toGroovy() {
+    StringBuilder result = new StringBuilder("when {\n");
+    if (beforeAgent != null && beforeAgent) {
+      result.append("beforeAgent true\n");
     }
-
-    public List<ModelASTWhenContent> getConditions() {
-        return conditions;
+    if (beforeInput != null && beforeInput) {
+      result.append("beforeInput true\n");
     }
-
-    public void setConditions(List<ModelASTWhenContent> conditions) {
-        this.conditions = conditions;
+    if (beforeOptions != null && beforeOptions) {
+      result.append("beforeOptions true\n");
     }
+    result.append(toGroovy(conditions));
+    result.append("}\n");
+    return result.toString();
+  }
 
-    public Boolean getBeforeAgent() {
-        return beforeAgent;
-    }
+  @Override
+  public void removeSourceLocation() {
+    super.removeSourceLocation();
+    removeSourceLocationsFrom(conditions);
+  }
 
-    public void setBeforeAgent(Boolean beforeAgent) {
-        this.beforeAgent = beforeAgent;
-    }
+  @Override
+  public String toString() {
+    return "ModelASTWhen{"
+        + "conditions="
+        + conditions
+        + ", beforeAgent="
+        + beforeAgent
+        + ", beforeInput="
+        + beforeInput
+        + ", beforeOptions="
+        + beforeOptions
+        + "}";
+  }
 
-    public Boolean getBeforeInput() {
-        return beforeInput;
-    }
-
-    public void setBeforeInput(Boolean beforeInput) {
-        this.beforeInput = beforeInput;
-    }
-
-    public Boolean getBeforeOptions() {
-        return beforeOptions;
-    }
-
-    public void setBeforeOptions(Boolean beforeOptions) {
-        this.beforeOptions = beforeOptions;
-    }
-
-    @Override
-    @NonNull
-    public Object toJSON() {
-        return new JSONObject()
-                .accumulate("conditions", toJSONArray(conditions))
-                .elementOpt("beforeAgent", beforeAgent)
-                .elementOpt("beforeInput", beforeInput)
-                .elementOpt("beforeOptions", beforeOptions);
-    }
-
-    @Override
-    @NonNull
-    public String toGroovy() {
-        StringBuilder result = new StringBuilder("when {\n");
-        if (beforeAgent != null && beforeAgent) {
-            result.append("beforeAgent true\n");
-        }
-        if (beforeInput != null && beforeInput) {
-            result.append("beforeInput true\n");
-        }
-        if (beforeOptions != null && beforeOptions) {
-            result.append("beforeOptions true\n");
-        }
-        result.append(toGroovy(conditions));
-        result.append("}\n");
-        return result.toString();
-    }
-
-    @Override
-    public void removeSourceLocation() {
-        super.removeSourceLocation();
-        removeSourceLocationsFrom(conditions);
-    }
-
-    @Override
-    public String toString() {
-        return "ModelASTWhen{" +
-                "conditions=" + conditions +
-                ", beforeAgent=" + beforeAgent +
-                ", beforeInput=" + beforeInput +
-                ", beforeOptions=" + beforeOptions +
-                "}";
-    }
-
-    @Override
-    public void validate(@NonNull final ModelValidator validator) {
-        validator.validateElement(this);
-        validate(validator, conditions);
-    }
+  @Override
+  public void validate(@NonNull final ModelValidator validator) {
+    validator.validateElement(this);
+    validate(validator, conditions);
+  }
 }

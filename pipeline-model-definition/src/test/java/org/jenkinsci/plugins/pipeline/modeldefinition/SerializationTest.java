@@ -24,6 +24,9 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import static org.junit.Assert.*;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.BooleanParameterDefinition;
 import hudson.model.Describable;
 import hudson.model.ParametersDefinitionProperty;
@@ -32,6 +35,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.tasks.LogRotator;
 import hudson.triggers.TimerTrigger;
 import hudson.triggers.Trigger;
+import java.util.Arrays;
 import jenkins.model.BuildDiscarder;
 import jenkins.model.BuildDiscarderProperty;
 import jenkins.plugins.git.GitSCMSource;
@@ -49,159 +53,164 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Arrays;
-
-import static org.junit.Assert.*;
-
 /**
- * Note that in practice, only {@link #serializationEnvGString} fails, but it felt best to cover the other possible
- * cases as well.
+ * Note that in practice, only {@link #serializationEnvGString} fails, but it felt best to cover the
+ * other possible cases as well.
  */
 @Issue("JENKINS-42498")
 public class SerializationTest extends AbstractModelDefTest {
 
-    private static Slave s;
+  private static Slave s;
 
-    @BeforeClass
-    public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setNumExecutors(4);
-        s.setLabelString("some-label test");
-        s.getNodeProperties().add(new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
+  @BeforeClass
+  public static void setUpAgent() throws Exception {
+    s = j.createOnlineSlave();
+    s.setNumExecutors(4);
+    s.setLabelString("some-label test");
+    s.getNodeProperties()
+        .add(
+            new EnvironmentVariablesNodeProperty(
+                new EnvironmentVariablesNodeProperty.Entry("ONAGENT", "true")));
+  }
+
+  @Test
+  public void serializationEnvGString() throws Exception {
+    expect("serialization/serializationEnvGString")
+        .logContains("[Pipeline] { (foo)", "_UNDERSCORE is VALID")
+        .logMatches("FOO is test\\d+foo")
+        .go();
+  }
+
+  @Test
+  public void serializationParametersGString() throws Exception {
+    WorkflowRun b =
+        expect("serialization/serializationParametersGString")
+            .logContains("[Pipeline] { (foo)", "hello")
+            .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+            .go();
+
+    WorkflowJob p = b.getParent();
+
+    ParametersDefinitionProperty pdp = p.getProperty(ParametersDefinitionProperty.class);
+    assertNotNull(pdp);
+
+    assertEquals(1, pdp.getParameterDefinitions().size());
+    assertEquals(BooleanParameterDefinition.class, pdp.getParameterDefinitions().get(0).getClass());
+    BooleanParameterDefinition bpd =
+        (BooleanParameterDefinition) pdp.getParameterDefinitions().get(0);
+    assertEquals(p.getDisplayName(), bpd.getName());
+    assertTrue(bpd.isDefaultValue());
+  }
+
+  @Test
+  public void serializationAgentGString() throws Exception {
+    expect("serialization/serializationAgentGString")
+        .logContains("[Pipeline] { (foo)", "ONAGENT=true")
+        .go();
+  }
+
+  @Test
+  public void serializationAgentNestedGString() throws Exception {
+    expect("serialization/serializationAgentNestedGString")
+        .logContains("[Pipeline] { (foo)", "ONAGENT=true")
+        .go();
+  }
+
+  @Test
+  public void serializationJobPropsGString() throws Exception {
+    WorkflowRun b =
+        expect("serialization/serializationJobPropsGString")
+            .logContains("[Pipeline] { (foo)", "hello")
+            .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
+            .go();
+
+    WorkflowJob p = b.getParent();
+
+    BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
+    assertNotNull(bdp);
+    BuildDiscarder strategy = bdp.getStrategy();
+    assertNotNull(strategy);
+    assertEquals(LogRotator.class, strategy.getClass());
+    LogRotator lr = (LogRotator) strategy;
+    assertEquals(Integer.parseInt(p.getDisplayName().substring(4)), lr.getNumToKeep());
+  }
+
+  @Test
+  public void serializationLibrariesGString() throws Exception {
+    otherRepo.init();
+    otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
+    otherRepo.write("vars/myecho.txt", "Says something very special!");
+    otherRepo.git("add", "vars");
+    otherRepo.git("commit", "--message=init");
+    LibraryConfiguration firstLib =
+        new LibraryConfiguration(
+            "echo-utils",
+            new SCMSourceRetriever(
+                new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
+
+    thirdRepo.init();
+    thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
+    thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
+    thirdRepo.git("add", "vars");
+    thirdRepo.git("commit", "--message=init");
+    LibraryConfiguration secondLib =
+        new LibraryConfiguration(
+            "test",
+            new SCMSourceRetriever(
+                new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
+    secondLib.setDefaultVersion("master");
+    GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
+
+    expect("serialization/serializationLibrariesGString")
+        .logContains("something special", "from another library")
+        .go();
+  }
+
+  @Test
+  public void serializationTriggersGString() throws Exception {
+    WorkflowRun b =
+        expect("serialization/serializationTriggersGString")
+            .logContains("[Pipeline] { (foo)", "hello")
+            .logNotContains("[Pipeline] { (Post Actions)")
+            .go();
+
+    WorkflowJob p = b.getParent();
+
+    PipelineTriggersJobProperty triggersJobProperty = p.getTriggersJobProperty();
+    assertNotNull(triggersJobProperty);
+    assertEquals(1, triggersJobProperty.getTriggers().size());
+    TimerTrigger.DescriptorImpl timerDesc =
+        j.jenkins.getDescriptorByType(TimerTrigger.DescriptorImpl.class);
+
+    Trigger trigger = triggersJobProperty.getTriggerForDescriptor(timerDesc);
+    assertNotNull(trigger);
+
+    assertTrue(trigger instanceof TimerTrigger);
+    TimerTrigger timer = (TimerTrigger) trigger;
+    assertEquals("@daily", timer.getSpec());
+  }
+
+  @Test
+  public void serializationWhenBranchGString() throws Exception {
+    expect("serialization/serializationWhenBranchGString")
+        .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+        .go();
+  }
+
+  @Test
+  public void serializationWhenEnvGString() throws Exception {
+    expect("serialization/serializationWhenEnvGString")
+        .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
+        .go();
+  }
+
+  @TestExtension
+  public static class XStreamPickleFactory extends SingleTypedPickleFactory<Describable<?>> {
+
+    @Override
+    @NonNull
+    protected Pickle pickle(@NonNull Describable<?> d) {
+      return new XStreamPickle(d);
     }
-
-    @Test
-    public void serializationEnvGString() throws Exception {
-        expect("serialization/serializationEnvGString")
-                .logContains("[Pipeline] { (foo)",
-                        "_UNDERSCORE is VALID")
-                .logMatches("FOO is test\\d+foo")
-                .go();
-    }
-
-    @Test
-    public void serializationParametersGString() throws Exception {
-        WorkflowRun b = expect("serialization/serializationParametersGString")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
-                .go();
-
-        WorkflowJob p = b.getParent();
-
-        ParametersDefinitionProperty pdp = p.getProperty(ParametersDefinitionProperty.class);
-        assertNotNull(pdp);
-
-        assertEquals(1, pdp.getParameterDefinitions().size());
-        assertEquals(BooleanParameterDefinition.class, pdp.getParameterDefinitions().get(0).getClass());
-        BooleanParameterDefinition bpd = (BooleanParameterDefinition) pdp.getParameterDefinitions().get(0);
-        assertEquals(p.getDisplayName(), bpd.getName());
-        assertTrue(bpd.isDefaultValue());
-    }
-
-    @Test
-    public void serializationAgentGString() throws Exception {
-        expect("serialization/serializationAgentGString")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
-                .go();
-    }
-
-    @Test
-    public void serializationAgentNestedGString() throws Exception {
-        expect("serialization/serializationAgentNestedGString")
-                .logContains("[Pipeline] { (foo)", "ONAGENT=true")
-                .go();
-    }
-
-    @Test
-    public void serializationJobPropsGString() throws Exception {
-        WorkflowRun b = expect("serialization/serializationJobPropsGString")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")")
-                .go();
-
-        WorkflowJob p = b.getParent();
-
-        BuildDiscarderProperty bdp = p.getProperty(BuildDiscarderProperty.class);
-        assertNotNull(bdp);
-        BuildDiscarder strategy = bdp.getStrategy();
-        assertNotNull(strategy);
-        assertEquals(LogRotator.class, strategy.getClass());
-        LogRotator lr = (LogRotator) strategy;
-        assertEquals(Integer.parseInt(p.getDisplayName().substring(4)), lr.getNumToKeep());
-    }
-
-    @Test
-    public void serializationLibrariesGString() throws Exception {
-        otherRepo.init();
-        otherRepo.write("vars/myecho.groovy", "def call() {echo 'something special'}");
-        otherRepo.write("vars/myecho.txt", "Says something very special!");
-        otherRepo.git("add", "vars");
-        otherRepo.git("commit", "--message=init");
-        LibraryConfiguration firstLib = new LibraryConfiguration("echo-utils",
-                new SCMSourceRetriever(new GitSCMSource(null, otherRepo.toString(), "", "*", "", true)));
-
-        thirdRepo.init();
-        thirdRepo.write("vars/whereFrom.groovy", "def call() {echo 'from another library'}");
-        thirdRepo.write("vars/whereFrom.txt", "Says where it's from!");
-        thirdRepo.git("add", "vars");
-        thirdRepo.git("commit", "--message=init");
-        LibraryConfiguration secondLib = new LibraryConfiguration("test",
-                new SCMSourceRetriever(new GitSCMSource(null, thirdRepo.toString(), "", "*", "", true)));
-        secondLib.setDefaultVersion("master");
-        GlobalLibraries.get().setLibraries(Arrays.asList(firstLib, secondLib));
-
-        expect("serialization/serializationLibrariesGString")
-                .logContains("something special", "from another library")
-                .go();
-    }
-
-    @Test
-    public void serializationTriggersGString() throws Exception {
-        WorkflowRun b = expect("serialization/serializationTriggersGString")
-                .logContains("[Pipeline] { (foo)", "hello")
-                .logNotContains("[Pipeline] { (Post Actions)")
-                .go();
-
-        WorkflowJob p = b.getParent();
-
-        PipelineTriggersJobProperty triggersJobProperty = p.getTriggersJobProperty();
-        assertNotNull(triggersJobProperty);
-        assertEquals(1, triggersJobProperty.getTriggers().size());
-        TimerTrigger.DescriptorImpl timerDesc = j.jenkins.getDescriptorByType(TimerTrigger.DescriptorImpl.class);
-
-        Trigger trigger = triggersJobProperty.getTriggerForDescriptor(timerDesc);
-        assertNotNull(trigger);
-
-        assertTrue(trigger instanceof TimerTrigger);
-        TimerTrigger timer = (TimerTrigger) trigger;
-        assertEquals("@daily", timer.getSpec());
-    }
-
-    @Test
-    public void serializationWhenBranchGString() throws Exception {
-        expect("serialization/serializationWhenBranchGString")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-    @Test
-    public void serializationWhenEnvGString() throws Exception {
-        expect("serialization/serializationWhenEnvGString")
-                .logContains("[Pipeline] { (One)", "[Pipeline] { (Two)", "World")
-                .go();
-    }
-
-
-    @TestExtension
-    public static class XStreamPickleFactory extends SingleTypedPickleFactory<Describable<?>> {
-
-        @Override
-        @NonNull
-        protected Pickle pickle(@NonNull Describable<?> d) {
-            return new XStreamPickle(d);
-        }
-
-    }
-
+  }
 }

@@ -25,40 +25,40 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.credentials.impl;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.StringBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Extension
 public class StringCredentialsHandler extends CredentialsBindingHandler<StringCredentials> {
 
-    @NonNull
-    @Override
-    public List<MultiBinding<StringCredentials>> toBindings(String varName, String credentialsId) {
-        return Collections.<MultiBinding<StringCredentials>>singletonList(new StringBinding(varName, credentialsId));
-    }
+  @NonNull
+  @Override
+  public List<MultiBinding<StringCredentials>> toBindings(String varName, String credentialsId) {
+    return Collections.<MultiBinding<StringCredentials>>singletonList(
+        new StringBinding(varName, credentialsId));
+  }
 
-    @NonNull
-    @Override
-    public Class<? extends StandardCredentials> type() {
-        return StringCredentials.class;
-    }
+  @NonNull
+  @Override
+  public Class<? extends StandardCredentials> type() {
+    return StringCredentials.class;
+  }
 
-    @NonNull
-    @Override
-    public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("$class", StringBinding.class.getName());
-        map.put("variable", new EnvVarResolver());
-        map.put("credentialsId", credentialsId);
-        return Collections.singletonList(map);
-    }
+  @NonNull
+  @Override
+  public List<Map<String, Object>> getWithCredentialsParameters(String credentialsId) {
+    Map<String, Object> map = new HashMap<>();
+    map.put("$class", StringBinding.class.getName());
+    map.put("variable", new EnvVarResolver());
+    map.put("credentialsId", credentialsId);
+    return Collections.singletonList(map);
+  }
 }

@@ -24,50 +24,48 @@
 
 package org.jenkinsci.plugins.pipeline;
 
+import static org.junit.Assert.*;
+
 import hudson.ExtensionList;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.util.List;
-
-import static org.junit.Assert.*;
-
 public class StageTagsMetadataTest {
-    @Rule
-    public JenkinsRule rule = new JenkinsRule();
+  @Rule public JenkinsRule rule = new JenkinsRule();
 
-    @Test
-    public void stageStatus() throws Exception {
-        ExtensionList<StageTagsMetadata> list = rule.jenkins.getExtensionList(StageTagsMetadata.class);
-        StageStatus stageStatus = list.get(StageStatus.class);
-        assertNotNull(stageStatus);
+  @Test
+  public void stageStatus() throws Exception {
+    ExtensionList<StageTagsMetadata> list = rule.jenkins.getExtensionList(StageTagsMetadata.class);
+    StageStatus stageStatus = list.get(StageStatus.class);
+    assertNotNull(stageStatus);
 
-        assertFalse(stageStatus.takesArbitraryValues());
+    assertFalse(stageStatus.takesArbitraryValues());
 
-        assertEquals(StageStatus.TAG_NAME, stageStatus.getTagName());
+    assertEquals(StageStatus.TAG_NAME, stageStatus.getTagName());
 
-        List<String> vals = stageStatus.getPossibleValues();
+    List<String> vals = stageStatus.getPossibleValues();
 
-        assertTrue(vals.contains(StageStatus.getFailedAndContinued()));
-        assertTrue(vals.contains(StageStatus.getSkippedForConditional()));
-        assertTrue(vals.contains(StageStatus.getSkippedForFailure()));
-        assertTrue(vals.contains(StageStatus.getSkippedForUnstable()));
-    }
+    assertTrue(vals.contains(StageStatus.getFailedAndContinued()));
+    assertTrue(vals.contains(StageStatus.getSkippedForConditional()));
+    assertTrue(vals.contains(StageStatus.getSkippedForFailure()));
+    assertTrue(vals.contains(StageStatus.getSkippedForUnstable()));
+  }
 
-    @Test
-    public void syntheticStage() throws Exception {
-        ExtensionList<StageTagsMetadata> list = rule.jenkins.getExtensionList(StageTagsMetadata.class);
-        SyntheticStage synthetic = list.get(SyntheticStage.class);
-        assertNotNull(synthetic);
+  @Test
+  public void syntheticStage() throws Exception {
+    ExtensionList<StageTagsMetadata> list = rule.jenkins.getExtensionList(StageTagsMetadata.class);
+    SyntheticStage synthetic = list.get(SyntheticStage.class);
+    assertNotNull(synthetic);
 
-        assertFalse(synthetic.takesArbitraryValues());
+    assertFalse(synthetic.takesArbitraryValues());
 
-        assertEquals(SyntheticStage.TAG_NAME, synthetic.getTagName());
+    assertEquals(SyntheticStage.TAG_NAME, synthetic.getTagName());
 
-        List<String> vals = synthetic.getPossibleValues();
+    List<String> vals = synthetic.getPossibleValues();
 
-        assertTrue(vals.contains(SyntheticStage.getPre()));
-        assertTrue(vals.contains(SyntheticStage.getPost()));
-    }
+    assertTrue(vals.contains(SyntheticStage.getPre()));
+    assertTrue(vals.contains(SyntheticStage.getPost()));
+  }
 }

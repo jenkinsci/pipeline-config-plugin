@@ -24,53 +24,52 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.cli;
 
+import static jenkins.model.Jenkins.READ;
+
 import hudson.Extension;
 import hudson.cli.CLICommand;
+import java.util.ArrayList;
+import java.util.List;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.pipeline.modeldefinition.endpoints.ModelConverterAction;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.Converter;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static jenkins.model.Jenkins.READ;
-
 @Extension
 public class DeclarativeLinterCommand extends CLICommand {
-    @Override
-    public String getShortDescription() {
-        return Messages.DeclarativeLinterCommand_ShortDescription();
-    }
+  @Override
+  public String getShortDescription() {
+    return Messages.DeclarativeLinterCommand_ShortDescription();
+  }
 
-    protected int run() throws Exception {
-        Jenkins.get().checkPermission(READ);
-        int retVal = 0;
-        List<String> output = new ArrayList<>();
+  protected int run() throws Exception {
+    Jenkins.get().checkPermission(READ);
+    int retVal = 0;
+    List<String> output = new ArrayList<>();
 
-        String script = IOUtils.toString(stdin);
+    String script = IOUtils.toString(stdin);
 
-        if (script != null) {
-            try {
+    if (script != null) {
+      try {
 
-                ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(script);
-                if (pipelineDef != null) {
-                    output.add("Jenkinsfile successfully validated.");
-                    retVal = 0;
-                } else {
-                    output.add("Jenkinsfile content '" + script + "' did not contain the 'pipeline' step");
-                    retVal = 1;
-                }
-            } catch (Exception e) {
-                output.add("Errors encountered validating Jenkinsfile:");
-                retVal = 1;
-                output.addAll(ModelConverterAction.errorToStrings(e));
-            }
+        ModelASTPipelineDef pipelineDef = Converter.scriptToPipelineDef(script);
+        if (pipelineDef != null) {
+          output.add("Jenkinsfile successfully validated.");
+          retVal = 0;
+        } else {
+          output.add("Jenkinsfile content '" + script + "' did not contain the 'pipeline' step");
+          retVal = 1;
         }
-        
-        IOUtils.writeLines(output, null, stdout);
-
-        return retVal;
+      } catch (Exception e) {
+        output.add("Errors encountered validating Jenkinsfile:");
+        retVal = 1;
+        output.addAll(ModelConverterAction.errorToStrings(e));
+      }
     }
+
+    IOUtils.writeLines(output, null, stdout);
+
+    return retVal;
+  }
 }

@@ -24,6 +24,8 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import groovy.lang.Closure;
 import hudson.Extension;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -41,85 +43,81 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 /**
- * Stage condition based on the current branch. i.e. the env var BRANCH_NAME.
- * As populated by {@link jenkins.branch.BranchNameContributor}
+ * Stage condition based on the current branch. i.e. the env var BRANCH_NAME. As populated by {@link
+ * jenkins.branch.BranchNameContributor}
  */
 public class ExpressionConditional extends DeclarativeStageConditional<ExpressionConditional> {
-    private final String block;
+  private final String block;
 
-    // Needs to be transient to avoid potential excessive pickling - see JENKINS-48209
-    private transient Closure closureBlock;
+  // Needs to be transient to avoid potential excessive pickling - see JENKINS-48209
+  private transient Closure closureBlock;
 
-    @Deprecated
-    public ExpressionConditional(String block) {
-        this.block = block;
-        this.closureBlock = null;
+  @Deprecated
+  public ExpressionConditional(String block) {
+    this.block = block;
+    this.closureBlock = null;
+  }
+
+  @DataBoundConstructor
+  public ExpressionConditional() {
+    this.block = null;
+  }
+
+  public String getBlock() {
+    return block;
+  }
+
+  public Closure getClosureBlock() {
+    return closureBlock;
+  }
+
+  public void setClosureBlock(Closure closureBlock) {
+    this.closureBlock = closureBlock;
+  }
+
+  @Extension
+  @Symbol("expression")
+  public static class DescriptorImpl
+      extends DeclarativeStageConditionalDescriptor<ExpressionConditional> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Execute the stage if a Scripted Pipeline expression evaluates as true";
     }
 
-    @DataBoundConstructor
-    public ExpressionConditional() {
-        this.block = null;
+    /** ExpressionConditional has no form equivalent without jumping through some hoops, so... */
+    @Override
+    public boolean inDirectiveGenerator() {
+      return false;
     }
 
-    public String getBlock() {
-        return block;
-    }
-
-    public Closure getClosureBlock() {
-        return closureBlock;
-    }
-
-    public void setClosureBlock(Closure closureBlock) {
-        this.closureBlock = closureBlock;
-    }
-
-    @Extension
-    @Symbol("expression")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<ExpressionConditional> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Execute the stage if a Scripted Pipeline expression evaluates as true";
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      if (original != null && original instanceof ModelASTWhenExpression) {
+        ModelASTWhenExpression whenExpr = (ModelASTWhenExpression) original;
+        if (whenExpr.getSourceLocation() instanceof Statement) {
+          BlockStatementMatch block =
+              ASTParserUtils.matchBlockStatement((Statement) whenExpr.getSourceLocation());
+          if (block != null) {
+            return GeneralUtils.callX(
+                ClassHelper.make(DescriptorImpl.class),
+                "instanceFromClosure",
+                new ArgumentListExpression(block.getBody()));
+          }
         }
+      }
 
-        /**
-         * ExpressionConditional has no form equivalent without jumping through some hoops, so...
-         */
-        @Override
-        public boolean inDirectiveGenerator() {
-            return false;
-        }
-
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            if (original != null && original instanceof ModelASTWhenExpression) {
-                ModelASTWhenExpression whenExpr = (ModelASTWhenExpression) original;
-                if (whenExpr.getSourceLocation() instanceof Statement) {
-                    BlockStatementMatch block =
-                            ASTParserUtils.matchBlockStatement((Statement) whenExpr.getSourceLocation());
-                    if (block != null) {
-                        return GeneralUtils.callX(ClassHelper.make(DescriptorImpl.class),
-                                "instanceFromClosure",
-                                new ArgumentListExpression(block.getBody())
-                        );
-                    }
-                }
-            }
-
-            return GeneralUtils.constX(null);
-        }
-
-        @Whitelisted
-        public static ExpressionConditional instanceFromClosure(Closure c) {
-            ExpressionConditional conditional = new ExpressionConditional();
-            conditional.setClosureBlock(c);
-            return conditional;
-        }
+      return GeneralUtils.constX(null);
     }
 
-    private static final long serialVersionUID = 1L;
+    @Whitelisted
+    public static ExpressionConditional instanceFromClosure(Closure c) {
+      ExpressionConditional conditional = new ExpressionConditional();
+      conditional.setClosureBlock(c);
+      return conditional;
+    }
+  }
+
+  private static final long serialVersionUID = 1L;
 }

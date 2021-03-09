@@ -24,7 +24,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.properties;
 
+import static org.junit.Assert.*;
+
 import hudson.model.Result;
+import java.util.Map;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.workflow.flow.StashManager;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -32,84 +35,83 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
-import java.util.Map;
-
-import static org.junit.Assert.*;
-
 public class PreserveStashesJobPropertyTest extends AbstractModelDefTest {
 
-    @Issue("JENKINS-45455")
-    @Test
-    public void stashWithNoProperty() throws Exception {
-        WorkflowRun r = expect("properties", "stashWithNoProperty")
-                .go();
-        Map<String,Map<String,String>> stashMap = StashManager.stashesOf(r);
-        assertTrue(stashMap.isEmpty());
+  @Issue("JENKINS-45455")
+  @Test
+  public void stashWithNoProperty() throws Exception {
+    WorkflowRun r = expect("properties", "stashWithNoProperty").go();
+    Map<String, Map<String, String>> stashMap = StashManager.stashesOf(r);
+    assertTrue(stashMap.isEmpty());
+  }
+
+  @Issue("JENKINS-45455")
+  @Test
+  public void stashWithDefaultPropertyValue() throws Exception {
+    WorkflowRun r = expect("properties", "stashWithDefaultPropertyValue").go();
+
+    assertFalse(StashManager.stashesOf(r).isEmpty());
+
+    WorkflowJob p = r.getParent();
+    assertNotNull(p);
+
+    j.buildAndAssertSuccess(p);
+
+    // Now that we've run 11 builds, the first one shouldn't have a stash any more.
+    assertTrue(StashManager.stashesOf(r).isEmpty());
+
+    // And build 2 should still have stashes.
+    WorkflowRun laterRun = p.getBuildByNumber(2);
+    assertNotNull(laterRun);
+    assertFalse(StashManager.stashesOf(laterRun).isEmpty());
+  }
+
+  @Issue("JENKINS-45455")
+  @Test
+  public void stashWithSpecifiedPropertyValue() throws Exception {
+    WorkflowRun r = expect("properties", "stashWithSpecifiedPropertyValue").go();
+
+    assertFalse(StashManager.stashesOf(r).isEmpty());
+
+    WorkflowJob p = r.getParent();
+    assertNotNull(p);
+
+    // Build 4 times to make sure get 5 total builds.
+    for (int i = 0; i < 4; i++) {
+      j.buildAndAssertSuccess(p);
     }
 
-    @Issue("JENKINS-45455")
-    @Test
-    public void stashWithDefaultPropertyValue() throws Exception {
-        WorkflowRun r = expect("properties", "stashWithDefaultPropertyValue")
-                .go();
+    // The first three builds shouldn't have stashes any more.
+    assertTrue(StashManager.stashesOf(p.getBuildByNumber(1)).isEmpty());
+    assertTrue(StashManager.stashesOf(p.getBuildByNumber(2)).isEmpty());
+    assertTrue(StashManager.stashesOf(p.getBuildByNumber(3)).isEmpty());
 
-        assertFalse(StashManager.stashesOf(r).isEmpty());
+    // The last two should still have stashes
+    assertFalse(StashManager.stashesOf(p.getBuildByNumber(4)).isEmpty());
+    assertFalse(StashManager.stashesOf(p.getBuildByNumber(5)).isEmpty());
+  }
 
-        WorkflowJob p = r.getParent();
-        assertNotNull(p);
+  @Issue("JENKINS-45455")
+  @Test
+  public void stashWithNegativePropertyValue() throws Exception {
+    WorkflowRun r =
+        expect(Result.FAILURE, "properties", "stashWithNegativePropertyValue")
+            .logContains(
+                Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount(
+                    PreserveStashesJobProperty.MAX_SAVED_STASHES))
+            .go();
+    assertTrue(StashManager.stashesOf(r).isEmpty());
+  }
 
-        j.buildAndAssertSuccess(p);
-
-        // Now that we've run 11 builds, the first one shouldn't have a stash any more.
-        assertTrue(StashManager.stashesOf(r).isEmpty());
-
-        // And build 2 should still have stashes.
-        WorkflowRun laterRun = p.getBuildByNumber(2);
-        assertNotNull(laterRun);
-        assertFalse(StashManager.stashesOf(laterRun).isEmpty());
-    }
-
-    @Issue("JENKINS-45455")
-    @Test
-    public void stashWithSpecifiedPropertyValue() throws Exception {
-        WorkflowRun r = expect("properties", "stashWithSpecifiedPropertyValue")
-                .go();
-
-        assertFalse(StashManager.stashesOf(r).isEmpty());
-
-        WorkflowJob p = r.getParent();
-        assertNotNull(p);
-
-        // Build 4 times to make sure get 5 total builds.
-        for (int i = 0; i < 4; i++) {
-            j.buildAndAssertSuccess(p);
-        }
-
-        // The first three builds shouldn't have stashes any more.
-        assertTrue(StashManager.stashesOf(p.getBuildByNumber(1)).isEmpty());
-        assertTrue(StashManager.stashesOf(p.getBuildByNumber(2)).isEmpty());
-        assertTrue(StashManager.stashesOf(p.getBuildByNumber(3)).isEmpty());
-
-        // The last two should still have stashes
-        assertFalse(StashManager.stashesOf(p.getBuildByNumber(4)).isEmpty());
-        assertFalse(StashManager.stashesOf(p.getBuildByNumber(5)).isEmpty());
-    }
-
-    @Issue("JENKINS-45455")
-    @Test
-    public void stashWithNegativePropertyValue() throws Exception {
-        WorkflowRun r = expect(Result.FAILURE, "properties", "stashWithNegativePropertyValue")
-                .logContains(Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount(PreserveStashesJobProperty.MAX_SAVED_STASHES))
-                .go();
-        assertTrue(StashManager.stashesOf(r).isEmpty());
-    }
-
-    @Issue("JENKINS-45455")
-    @Test
-    public void stashWithExcessPropertyValue() throws Exception {
-        WorkflowRun r = expect(Result.FAILURE, "properties", "stashWithExcessPropertyValue")
-                .logContains(Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount(PreserveStashesJobProperty.MAX_SAVED_STASHES))
-                .go();
-        assertTrue(StashManager.stashesOf(r).isEmpty());
-    }
+  @Issue("JENKINS-45455")
+  @Test
+  public void stashWithExcessPropertyValue() throws Exception {
+    WorkflowRun r =
+        expect(Result.FAILURE, "properties", "stashWithExcessPropertyValue")
+            .logContains(
+                Messages.PreserveStashesJobProperty_ValidatorImpl_InvalidBuildCount(
+                    PreserveStashesJobProperty.MAX_SAVED_STASHES))
+            .go();
+    assertTrue(StashManager.stashesOf(r).isEmpty());
+  }
 }

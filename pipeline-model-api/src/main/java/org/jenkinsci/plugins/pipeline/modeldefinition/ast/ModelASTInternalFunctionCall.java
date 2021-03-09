@@ -24,107 +24,100 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
+import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
  * An internal function call, most notably for use with {@link ModelASTEnvironment}
  *
  * @author Andrew Bayer
  */
-public class ModelASTInternalFunctionCall extends ModelASTElement implements ModelASTEnvironmentValue {
-    private String name;
-    private List<ModelASTValue> args = new ArrayList<>();
+public class ModelASTInternalFunctionCall extends ModelASTElement
+    implements ModelASTEnvironmentValue {
+  private String name;
+  private List<ModelASTValue> args = new ArrayList<>();
 
+  public ModelASTInternalFunctionCall(Object sourceLocation) {
+    super(sourceLocation);
+  }
 
-    public ModelASTInternalFunctionCall(Object sourceLocation) {
-        super(sourceLocation);
+  @Override
+  @NonNull
+  public JSONObject toJSON() {
+    return new JSONObject().accumulate("name", name).accumulate("arguments", toJSONArray(args));
+  }
+
+  @Override
+  public void validate(@NonNull final ModelValidator validator) {
+    validator.validateElement(this);
+    validate(validator, args);
+  }
+
+  @Override
+  @NonNull
+  public String toGroovy() {
+    StringBuilder result = new StringBuilder(name);
+    result.append('(');
+    result.append(toGroovyArgList(args));
+    result.append(')');
+    return result.toString();
+  }
+
+  @Override
+  public void removeSourceLocation() {
+    super.removeSourceLocation();
+    removeSourceLocationsFrom(args);
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public List<ModelASTValue> getArgs() {
+    return args;
+  }
+
+  public void setArgs(List<ModelASTValue> args) {
+    this.args = args;
+  }
+
+  @Override
+  public String toString() {
+    return "ModelASTInternalFunctionCall{" + "name='" + name + '\'' + ", args=" + args + "}";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
     }
 
-    @Override
-    @NonNull
-    public JSONObject toJSON() {
-        return new JSONObject()
-                .accumulate("name", name)
-                .accumulate("arguments", toJSONArray(args));
+    ModelASTInternalFunctionCall that = (ModelASTInternalFunctionCall) o;
+
+    if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
+      return false;
     }
+    return getArgs() != null ? getArgs().equals(that.getArgs()) : that.getArgs() == null;
+  }
 
-    @Override
-    public void validate(@NonNull final ModelValidator validator) {
-        validator.validateElement(this);
-        validate(validator, args);
-    }
-
-    @Override
-    @NonNull
-    public String toGroovy() {
-        StringBuilder result = new StringBuilder(name);
-        result.append('(');
-        result.append(toGroovyArgList(args));
-        result.append(')');
-        return result.toString();
-    }
-
-    @Override
-    public void removeSourceLocation() {
-        super.removeSourceLocation();
-        removeSourceLocationsFrom(args);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<ModelASTValue> getArgs() {
-        return args;
-    }
-
-    public void setArgs(List<ModelASTValue> args) {
-        this.args = args;
-    }
-
-    @Override
-    public String toString() {
-        return "ModelASTInternalFunctionCall{" +
-                "name='" + name + '\'' +
-                ", args=" + args +
-                "}";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-
-        ModelASTInternalFunctionCall that = (ModelASTInternalFunctionCall) o;
-
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
-            return false;
-        }
-        return getArgs() != null ? getArgs().equals(that.getArgs()) : that.getArgs() == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getArgs() != null ? getArgs().hashCode() : 0);
-        return result;
-    }
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+    result = 31 * result + (getArgs() != null ? getArgs().hashCode() : 0);
+    return result;
+  }
 }

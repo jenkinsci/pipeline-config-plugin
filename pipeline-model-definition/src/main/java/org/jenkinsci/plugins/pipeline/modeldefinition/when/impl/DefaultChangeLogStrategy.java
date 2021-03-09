@@ -25,39 +25,38 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import jenkins.scm.api.SCMHead;
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.ChangeLogStrategy;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 @Extension
 public class DefaultChangeLogStrategy extends ChangeLogStrategy {
 
-    private Class<?> bitbucketPr;
-    private Class<?> githubPr;
+  private Class<?> bitbucketPr;
+  private Class<?> githubPr;
 
-    public DefaultChangeLogStrategy() {
-        try {
-            githubPr = Class.forName("org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead");
-        } catch (ClassNotFoundException e) {
-            githubPr = null;
-        }
-        try {
-            bitbucketPr = Class.forName("com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead");
-        } catch (ClassNotFoundException e) {
-            bitbucketPr = null;
-        }
+  public DefaultChangeLogStrategy() {
+    try {
+      githubPr = Class.forName("org.jenkinsci.plugins.github_branch_source.PullRequestSCMHead");
+    } catch (ClassNotFoundException e) {
+      githubPr = null;
     }
+    try {
+      bitbucketPr = Class.forName("com.cloudbees.jenkins.plugins.bitbucket.PullRequestSCMHead");
+    } catch (ClassNotFoundException e) {
+      bitbucketPr = null;
+    }
+  }
 
-    @Override
-    protected boolean shouldExamineAllBuilds(@NonNull SCMHead head) {
-        if (githubPr != null && head.getClass().isAssignableFrom(githubPr)) {
-            return true;
-        }
-        if (bitbucketPr != null && head.getClass().isAssignableFrom(bitbucketPr)) {
-            return true;
-        }
-        return false;
+  @Override
+  protected boolean shouldExamineAllBuilds(@NonNull SCMHead head) {
+    if (githubPr != null && head.getClass().isAssignableFrom(githubPr)) {
+      return true;
     }
+    if (bitbucketPr != null && head.getClass().isAssignableFrom(bitbucketPr)) {
+      return true;
+    }
+    return false;
+  }
 }

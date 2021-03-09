@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.Extension;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
@@ -33,23 +34,20 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
+/** True if the run was restarted. */
+public class IsRestartedRunConditional
+    extends DeclarativeStageConditional<IsRestartedRunConditional> {
 
-/**
- * True if the run was restarted.
- */
-public class IsRestartedRunConditional extends DeclarativeStageConditional<IsRestartedRunConditional> {
+  @DataBoundConstructor
+  public IsRestartedRunConditional() {}
 
-    @DataBoundConstructor
-    public IsRestartedRunConditional() {
+  @Extension
+  @Symbol("isRestartedRun")
+  public static class DescriptorImpl
+      extends DeclarativeStageConditionalDescriptor<IsRestartedRunConditional> {
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      return ASTParserUtils.transformWhenContentToRuntimeAST(original);
     }
-
-    @Extension
-    @Symbol("isRestartedRun")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<IsRestartedRunConditional> {
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
-        }
-    }
+  }
 }

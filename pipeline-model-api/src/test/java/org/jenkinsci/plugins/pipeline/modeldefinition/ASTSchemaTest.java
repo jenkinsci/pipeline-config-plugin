@@ -24,6 +24,11 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
+
+import java.io.IOException;
+import java.net.URL;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.junit.ClassRule;
@@ -31,57 +36,52 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import java.io.IOException;
-import java.net.URL;
-
-import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
-
 public class ASTSchemaTest {
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
-    @ClassRule
-    public static JenkinsRule j = new JenkinsRule();
+  @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
+  @ClassRule public static JenkinsRule j = new JenkinsRule();
 
-    @Test
-    public void doSchema() throws Exception {
-        JenkinsRule.WebClient wc = j.createWebClient();
-        String rawSchema = wc.goTo(ASTSchema.AST_SCHEMA_URL + "/json", "application/json").getWebResponse().getContentAsString();
-        assertNotNull(rawSchema);
-        JSONObject remoteSchema = JSONObject.fromObject(rawSchema);
-        assertNotNull(remoteSchema);
-        assertFalse(remoteSchema.isEmpty());
-        assertFalse(remoteSchema.isNullObject());
+  @Test
+  public void doSchema() throws Exception {
+    JenkinsRule.WebClient wc = j.createWebClient();
+    String rawSchema =
+        wc.goTo(ASTSchema.AST_SCHEMA_URL + "/json", "application/json")
+            .getWebResponse()
+            .getContentAsString();
+    assertNotNull(rawSchema);
+    JSONObject remoteSchema = JSONObject.fromObject(rawSchema);
+    assertNotNull(remoteSchema);
+    assertFalse(remoteSchema.isEmpty());
+    assertFalse(remoteSchema.isNullObject());
 
-        String rawInternalSchema = fileContentsFromResources("ast-schema.json");
-        assertNotNull(rawInternalSchema);
-        JSONObject internalSchema = JSONObject.fromObject(rawInternalSchema);
+    String rawInternalSchema = fileContentsFromResources("ast-schema.json");
+    assertNotNull(rawInternalSchema);
+    JSONObject internalSchema = JSONObject.fromObject(rawInternalSchema);
 
-        assertNotNull(internalSchema);
-        assertFalse(internalSchema.isEmpty());
-        assertFalse(internalSchema.isNullObject());
+    assertNotNull(internalSchema);
+    assertFalse(internalSchema.isEmpty());
+    assertFalse(internalSchema.isNullObject());
 
-        assertEquals(internalSchema, remoteSchema);
+    assertEquals(internalSchema, remoteSchema);
+  }
+
+  protected String fileContentsFromResources(String fileName) throws IOException {
+    return fileContentsFromResources(fileName, false);
+  }
+
+  protected String fileContentsFromResources(String fileName, boolean swallowError)
+      throws IOException {
+    String fileContents = null;
+
+    URL url = getClass().getResource("/" + fileName);
+    if (url != null) {
+      fileContents = IOUtils.toString(url);
     }
 
-    protected String fileContentsFromResources(String fileName) throws IOException {
-        return fileContentsFromResources(fileName, false);
+    if (!swallowError) {
+      assertNotNull("No file contents for file " + fileName, fileContents);
+    } else {
+      assumeTrue(fileContents != null);
     }
-
-    protected String fileContentsFromResources(String fileName, boolean swallowError) throws IOException {
-        String fileContents = null;
-
-        URL url = getClass().getResource("/" + fileName);
-        if (url != null) {
-            fileContents = IOUtils.toString(url);
-        }
-
-        if (!swallowError) {
-            assertNotNull("No file contents for file " + fileName, fileContents);
-        } else {
-            assumeTrue(fileContents != null);
-        }
-        return fileContents;
-
-    }
+    return fileContents;
+  }
 }

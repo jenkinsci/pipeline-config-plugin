@@ -24,12 +24,17 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.actions;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.Queue;
 import hudson.model.*;
+import hudson.model.Queue;
 import hudson.util.FormValidation;
 import hudson.util.HttpResponses;
+import java.io.IOException;
+import java.util.*;
+import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import jenkins.model.ParameterizedJobMixIn;
 import jenkins.model.TransientActionFactory;
@@ -54,182 +59,202 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.util.*;
-
 @ExportedBean
 public class RestartDeclarativePipelineAction implements Action {
 
-    private final Run run;
+  private final Run run;
 
-    private RestartDeclarativePipelineAction(Run run) {
-        this.run = run;
+  private RestartDeclarativePipelineAction(Run run) {
+    this.run = run;
+  }
+
+  @Override
+  public String getDisplayName() {
+    return Messages.Restart_from_Stage();
+  }
+
+  @Override
+  public String getIconFileName() {
+    return isRestartEnabled()
+        ? "plugin/pipeline-model-definition/images/24x24/restart-stage.png"
+        : null;
+  }
+
+  @Override
+  public String getUrlName() {
+    return isRestartEnabled() ? "restart" : null;
+  }
+
+  /* accessible to Jelly */ public Run getOwner() {
+    return run;
+  }
+
+  @CheckForNull
+  private CpsFlowExecution getExecution() {
+    FlowExecutionOwner owner = ((FlowExecutionOwner.Executable) run).asFlowExecutionOwner();
+    if (owner == null) {
+      return null;
+    }
+    FlowExecution exec = owner.getOrNull();
+    return exec instanceof CpsFlowExecution ? (CpsFlowExecution) exec : null;
+  }
+
+  @Exported
+  public boolean isRestartEnabled() {
+    ExecutionModelAction executionModelAction = run.getAction(ExecutionModelAction.class);
+
+    return executionModelAction != null
+        && !run.isBuilding()
+        && run.hasPermission(Item.BUILD)
+        && run.getParent().isBuildable()
+        && getExecution() != null;
+  }
+
+  public Api getApi() {
+    return new Api(this);
+  }
+
+  @Restricted(NoExternalUse.class)
+  @RequirePOST
+  public HttpResponse doRestartPipeline(@QueryParameter String stageName) {
+    Map<String, String> result = new HashMap<>();
+    result.put("success", "false");
+
+    if (isRestartEnabled()) {
+      try {
+        run(stageName);
+
+        result.put("success", "true");
+        result.put("message", "ok");
+      } catch (IllegalStateException ise) {
+        result.put("message", "Failure restarting from stage: " + ise);
+      }
+    } else {
+      result.put("message", "not allowed to restart");
     }
 
-    @Override public String getDisplayName() {
-        return Messages.Restart_from_Stage();
+    return HttpResponses.okJSON(result);
+  }
+
+  @Restricted(DoNotUse.class)
+  @RequirePOST
+  public void doRestart(StaplerRequest req, StaplerResponse rsp)
+      throws ServletException, IOException {
+    if (!isRestartEnabled()) {
+      throw new AccessDeniedException(
+          "not allowed to restart"); // AccessDeniedException2 requires us to look up the specific
+      // Permission
+    }
+    JSONObject form = req.getSubmittedForm();
+    String stageName = Util.fixEmpty(form.getString("stageName"));
+
+    try {
+      run(stageName);
+    } catch (IllegalStateException ise) {
+      throw new Failure("Failure restarting from stage: " + ise);
     }
 
-    @Override public String getIconFileName() {
-        return isRestartEnabled() ? "plugin/pipeline-model-definition/images/24x24/restart-stage.png" : null;
-    }
+    rsp.sendRedirect(
+        "../.."); // back to WorkflowJob; new build might not start instantly so cannot redirect to
+    // it
+  }
 
-    @Override public String getUrlName() {
-        return isRestartEnabled() ? "restart" : null;
-    }
-
-    /* accessible to Jelly */ public Run getOwner() {
-        return run;
-    }
-
-    @CheckForNull
-    private CpsFlowExecution getExecution() {
-        FlowExecutionOwner owner = ((FlowExecutionOwner.Executable) run).asFlowExecutionOwner();
-        if (owner == null) {
-            return null;
-        }
-        FlowExecution exec = owner.getOrNull();
-        return exec instanceof CpsFlowExecution ? (CpsFlowExecution) exec : null;
-    }
-
-    @Exported
-    public boolean isRestartEnabled() {
-        ExecutionModelAction executionModelAction = run.getAction(ExecutionModelAction.class);
-
-        return executionModelAction != null &&
-                !run.isBuilding() &&
-                run.hasPermission(Item.BUILD) &&
-                run.getParent().isBuildable() &&
-                getExecution() != null;
-    }
-
-    public Api getApi() {
-        return new Api(this);
-    }
-
-    @Restricted(NoExternalUse.class)
-    @RequirePOST
-    public HttpResponse doRestartPipeline(@QueryParameter String stageName) {
-        Map<String, String> result = new HashMap<>();
-        result.put("success", "false");
-
-        if (isRestartEnabled()) {
-            try {
-                run(stageName);
-
-                result.put("success", "true");
-                result.put("message", "ok");
-            } catch (IllegalStateException ise) {
-                result.put("message", "Failure restarting from stage: " + ise);
+  @Exported
+  public List<String> getRestartableStages() {
+    List<String> stages = new ArrayList<>();
+    FlowExecution execution = getExecution();
+    if (execution != null) {
+      ExecutionModelAction execAction = run.getAction(ExecutionModelAction.class);
+      if (execAction != null) {
+        if (execAction.getStages() != null) {
+          for (ModelASTStage s : execAction.getStages().getStages()) {
+            if (!Utils.stageHasStatusOf(
+                s.getName(),
+                execution,
+                StageStatus.getSkippedForFailure(),
+                StageStatus.getSkippedForUnstable())) {
+              stages.add(s.getName());
             }
-        } else {
-            result.put("message", "not allowed to restart");
+          }
         }
+      }
+    }
+    return stages;
+  }
 
-        return HttpResponses.okJSON(result);
+  public String getCheckUrl() {
+    return Jenkins.get().getRootUrl() + run.getUrl() + getUrlName() + "/" + "checkStageName";
+  }
+
+  public FormValidation doCheckStageName(@QueryParameter String value) {
+    String s = Util.fixEmptyAndTrim(value);
+    if (s == null || s.equals("")) {
+      return FormValidation.error(Messages.RestartDeclarativePipelineAction_NullStageName());
+    }
+    if (!getRestartableStages().contains(s)) {
+      return FormValidation.error(
+          Messages.RestartDeclarativePipelineAction_StageNameNotPresent(
+              s, run.getFullDisplayName()));
+    }
+    return FormValidation.ok();
+  }
+
+  public Queue.Item run(String stageName) {
+    if (stageName == null || stageName.equals("")) {
+      throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_NullStageName());
     }
 
-    @Restricted(DoNotUse.class)
-    @RequirePOST
-    public void doRestart(StaplerRequest req, StaplerResponse rsp) throws ServletException, IOException {
-        if (!isRestartEnabled()) {
-            throw new AccessDeniedException("not allowed to restart"); // AccessDeniedException2 requires us to look up the specific Permission
-        }
-        JSONObject form = req.getSubmittedForm();
-        String stageName = Util.fixEmpty(form.getString("stageName"));
-
-        try {
-            run(stageName);
-        } catch (IllegalStateException ise) {
-            throw new Failure("Failure restarting from stage: " + ise);
-        }
-
-        rsp.sendRedirect("../.."); // back to WorkflowJob; new build might not start instantly so cannot redirect to it
+    if (!run.hasPermission(Item.BUILD) || !run.getParent().isBuildable()) {
+      throw new IllegalStateException(
+          Messages.RestartDeclarativePipelineAction_ProjectNotBuildable(
+              run.getParent().getFullName()));
     }
 
-    @Exported
-    public List<String> getRestartableStages() {
-        List<String> stages = new ArrayList<>();
-        FlowExecution execution = getExecution();
-        if (execution != null) {
-            ExecutionModelAction execAction = run.getAction(ExecutionModelAction.class);
-            if (execAction != null) {
-                if (execAction.getStages() != null) {
-                    for (ModelASTStage s : execAction.getStages().getStages()) {
-                        if (!Utils.stageHasStatusOf(s.getName(), execution,
-                                StageStatus.getSkippedForFailure(), StageStatus.getSkippedForUnstable())) {
-                            stages.add(s.getName());
-                        }
-                    }
-                }
-            }
-        }
-        return stages;
+    if (run.isBuilding()) {
+      throw new IllegalStateException(
+          Messages.RestartDeclarativePipelineAction_OriginRunIncomplete(run.getFullDisplayName()));
     }
 
-    public String getCheckUrl() {
-        return Jenkins.get().getRootUrl() + run.getUrl() + getUrlName() + "/" + "checkStageName";
+    ExecutionModelAction execAction = run.getAction(ExecutionModelAction.class);
+    if (execAction == null) {
+      throw new IllegalStateException(
+          Messages.RestartDeclarativePipelineAction_OriginWasNotDeclarative(
+              run.getFullDisplayName()));
     }
 
-    public FormValidation doCheckStageName(@QueryParameter String value) {
-        String s = Util.fixEmptyAndTrim(value);
-        if (s == null || s.equals("")) {
-            return FormValidation.error(Messages.RestartDeclarativePipelineAction_NullStageName());
-        }
-        if (!getRestartableStages().contains(s)) {
-            return FormValidation.error(Messages.RestartDeclarativePipelineAction_StageNameNotPresent(s, run.getFullDisplayName()));
-        }
-        return FormValidation.ok();
+    if (!getRestartableStages().contains(stageName)) {
+      throw new IllegalStateException(
+          Messages.RestartDeclarativePipelineAction_StageNameNotPresent(
+              stageName, run.getFullDisplayName()));
+    }
+    List<Action> actions = new ArrayList<>();
+    CpsFlowExecution execution = getExecution();
+    if (execution == null) {
+      throw new IllegalStateException(
+          Messages.RestartDeclarativePipelineAction_OriginRunMissingExecution(
+              run.getFullDisplayName()));
     }
 
-    public Queue.Item run(String stageName) {
-        if (stageName == null || stageName.equals("")) {
-            throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_NullStageName());
-        }
+    actions.add(new RestartFlowFactoryAction(run.getExternalizableId()));
+    actions.add(
+        new CauseAction(
+            new Cause.UserIdCause(), new RestartDeclarativePipelineCause(run, stageName)));
+    return ParameterizedJobMixIn.scheduleBuild2(
+        run.getParent(), 0, actions.toArray(new Action[actions.size()]));
+  }
 
-        if (!run.hasPermission(Item.BUILD) || !run.getParent().isBuildable()) {
-            throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_ProjectNotBuildable(run.getParent().getFullName()));
-        }
+  @Extension
+  public static class Factory extends TransientActionFactory<WorkflowRun> {
 
-        if (run.isBuilding()) {
-            throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_OriginRunIncomplete(run.getFullDisplayName()));
-        }
-
-        ExecutionModelAction execAction = run.getAction(ExecutionModelAction.class);
-        if (execAction == null) {
-            throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_OriginWasNotDeclarative(run.getFullDisplayName()));
-        }
-
-        if (!getRestartableStages().contains(stageName)) {
-            throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_StageNameNotPresent(stageName, run.getFullDisplayName()));
-        }
-        List<Action> actions = new ArrayList<>();
-        CpsFlowExecution execution = getExecution();
-        if (execution == null) {
-            throw new IllegalStateException(Messages.RestartDeclarativePipelineAction_OriginRunMissingExecution(run.getFullDisplayName()));
-        }
-
-        actions.add(new RestartFlowFactoryAction(run.getExternalizableId()));
-        actions.add(new CauseAction(new Cause.UserIdCause(), new RestartDeclarativePipelineCause(run, stageName)));
-        return ParameterizedJobMixIn.scheduleBuild2(run.getParent(), 0, actions.toArray(new Action[actions.size()]));
+    @Override
+    public Class<WorkflowRun> type() {
+      return WorkflowRun.class;
     }
 
-    @Extension
-    public static class Factory extends TransientActionFactory<WorkflowRun> {
-
-        @Override
-        public Class<WorkflowRun> type() {
-            return WorkflowRun.class;
-        }
-
-        @Override
-        @NonNull
-        public Collection<? extends Action> createFor(@NonNull WorkflowRun run) {
-            return Collections.<Action>singleton(new RestartDeclarativePipelineAction(run));
-        }
+    @Override
+    @NonNull
+    public Collection<? extends Action> createFor(@NonNull WorkflowRun run) {
+      return Collections.<Action>singleton(new RestartDeclarativePipelineAction(run));
     }
-
+  }
 }

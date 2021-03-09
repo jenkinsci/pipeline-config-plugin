@@ -27,39 +27,36 @@ import hudson.model.Slave;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * @author Andrew Bayer
- */
+/** @author Andrew Bayer */
 public class ScriptStepTest extends AbstractModelDefTest {
 
-    private static Slave s;
+  private static Slave s;
 
-    @BeforeClass
-    public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setLabelString("some-label");
-    }
+  @BeforeClass
+  public static void setUpAgent() throws Exception {
+    s = j.createOnlineSlave();
+    s.setLabelString("some-label");
+  }
 
-    @Test
-    public void simpleScript() throws Exception {
-        expect("simpleScript")
-                .logContains("[Pipeline] { (foo)", "In a script step")
-                .go();
-    }
+  @Test
+  public void simpleScript() throws Exception {
+    expect("simpleScript").logContains("[Pipeline] { (foo)", "In a script step").go();
+  }
 
-    @Test
-    public void globalLibrarySuccessInScript() throws Exception {
+  @Test
+  public void globalLibrarySuccessInScript() throws Exception {
 
-        initGlobalLibrary();
+    initGlobalLibrary();
 
-        // Test the successful, albeit limited, case.
-        expect("libraries/globalLibrarySuccessInScript")
-                .logContains("Hello Pipeline",
-                        "[seed-set-get]",
-                        "[nothing here]",
-                        "call(1,2)",
-                        "map call(3,4)",
-                        "title was yolo")
-                .go();
-    }
+    // Test the successful, albeit limited, case.
+    expect("libraries/globalLibrarySuccessInScript")
+        .logContains(
+            "Hello Pipeline",
+            "[seed-set-get]",
+            "[nothing here]",
+            "call(1,2)",
+            "map call(3,4)",
+            "title was yolo")
+        .go();
+  }
 }
