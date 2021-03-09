@@ -24,9 +24,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import static org.junit.Assert.assertEquals;
+
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import javax.annotation.Nonnull;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.workflow.testMetaStep.Curve;
 import org.junit.Rule;
@@ -35,54 +38,50 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
-
-import static org.junit.Assert.assertEquals;
-
 public class DescriptorLookupCacheTest {
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+  @Rule public JenkinsRule j = new JenkinsRule();
 
-    @Test
-    public void lookupFunctionPrefersMetaStep() throws Exception {
-        Descriptor<? extends Describable> d = DescriptorLookupCache.getPublicCache().lookupFunction("rhombus");
-        assertEquals(Rhombus.DescriptorImpl.class, d.getClass());
+  @Test
+  public void lookupFunctionPrefersMetaStep() throws Exception {
+    Descriptor<? extends Describable> d =
+        DescriptorLookupCache.getPublicCache().lookupFunction("rhombus");
+    assertEquals(Rhombus.DescriptorImpl.class, d.getClass());
+  }
+
+  public static final class FakeRhombus extends AbstractDescribableImpl<FakeRhombus> {
+    public final boolean foo;
+
+    @DataBoundConstructor
+    public FakeRhombus(boolean foo) {
+      this.foo = foo;
     }
 
-    public static final class FakeRhombus extends AbstractDescribableImpl<FakeRhombus> {
-        public final boolean foo;
+    @Symbol("rhombus")
+    @TestExtension
+    public static final class DescriptorImpl extends Descriptor<FakeRhombus> {}
+  }
 
-        @DataBoundConstructor
-        public FakeRhombus(boolean foo) {
-            this.foo = foo;
-        }
+  public static final class Rhombus extends Curve {
+    public final int n;
 
-        @Symbol("rhombus")
-        @TestExtension
-        public static final class DescriptorImpl extends Descriptor<FakeRhombus> {
-
-        }
+    @DataBoundConstructor
+    public Rhombus(int n) {
+      this.n = n;
     }
 
-    public static final class Rhombus extends Curve {
-        public final int n;
-
-        @DataBoundConstructor public Rhombus(int n) {
-            this.n = n;
-        }
-
-        @Override public String getDescription() {
-            return n + "-gon";
-        }
-
-        @Symbol("rhombus")
-        @TestExtension
-        public static class DescriptorImpl extends Descriptor<Curve> {
-            @Nonnull
-            @Override
-            public String getDisplayName() {
-                return "rhombus curve";
-            }
-        }
+    @Override
+    public String getDescription() {
+      return n + "-gon";
     }
+
+    @Symbol("rhombus")
+    @TestExtension
+    public static class DescriptorImpl extends Descriptor<Curve> {
+      @Nonnull
+      @Override
+      public String getDisplayName() {
+        return "rhombus curve";
+      }
+    }
+  }
 }

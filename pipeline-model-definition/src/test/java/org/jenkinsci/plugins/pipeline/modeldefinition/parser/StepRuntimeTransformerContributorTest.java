@@ -24,96 +24,93 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.codehaus.groovy.ast.expr.*;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
-
 public class StepRuntimeTransformerContributorTest extends AbstractModelDefTest {
 
-    @Test
-    public void simpleTransform() throws Exception {
-        expect("simplePipeline")
-                .logContains("HELLO")
-                .go();
-    }
+  @Test
+  public void simpleTransform() throws Exception {
+    expect("simplePipeline").logContains("HELLO").go();
+  }
 
-    @Test
-    public void nestedTransform() throws Exception {
-        expect("steps/nestedTreeSteps")
-                .logContains("HELLO", "Timeout set to expire in 10 sec")
-                .go();
-    }
+  @Test
+  public void nestedTransform() throws Exception {
+    expect("steps/nestedTreeSteps").logContains("HELLO", "Timeout set to expire in 10 sec").go();
+  }
 
-    @Test
-    public void transformPost() throws Exception {
-        expect("transformPost")
-                .logContains("[Pipeline] { (foo)",
-                        "HELLO",
-                        "I HAVE FINISHED",
-                        "MOST DEFINITELY FINISHED")
-                .logNotContains("I FAILED")
-                .go();
-    }
+  @Test
+  public void transformPost() throws Exception {
+    expect("transformPost")
+        .logContains("[Pipeline] { (foo)", "HELLO", "I HAVE FINISHED", "MOST DEFINITELY FINISHED")
+        .logNotContains("I FAILED")
+        .go();
+  }
 
-    @TestExtension
-    public static class EchoTransformer extends StepRuntimeTransformerContributor {
-        @Override
-        @NonNull
-        public MethodCallExpression transformStep(@NonNull ModelASTStep step, @NonNull MethodCallExpression methodCall) {
-            if (step.getName().equals("echo")) {
-                ArgumentListExpression newArgs = new ArgumentListExpression();
-                TupleExpression oldArgs = (TupleExpression)methodCall.getArguments();
+  @TestExtension
+  public static class EchoTransformer extends StepRuntimeTransformerContributor {
+    @Override
+    @NonNull
+    public MethodCallExpression transformStep(
+        @NonNull ModelASTStep step, @NonNull MethodCallExpression methodCall) {
+      if (step.getName().equals("echo")) {
+        ArgumentListExpression newArgs = new ArgumentListExpression();
+        TupleExpression oldArgs = (TupleExpression) methodCall.getArguments();
 
-                for (Expression expr : oldArgs.getExpressions()) {
-                    if (expr instanceof ConstantExpression && ((ConstantExpression) expr).getValue() instanceof String) {
-                        String origVal = (String)((ConstantExpression)expr).getValue();
-                        newArgs.addExpression(constX(origVal.toUpperCase()));
-                    }
-                }
-                methodCall.setArguments(newArgs);
-            }
-
-            return methodCall;
+        for (Expression expr : oldArgs.getExpressions()) {
+          if (expr instanceof ConstantExpression
+              && ((ConstantExpression) expr).getValue() instanceof String) {
+            String origVal = (String) ((ConstantExpression) expr).getValue();
+            newArgs.addExpression(constX(origVal.toUpperCase()));
+          }
         }
+        methodCall.setArguments(newArgs);
+      }
+
+      return methodCall;
     }
+  }
 
-    @TestExtension
-    public static class TimeoutTransformer extends StepRuntimeTransformerContributor {
-        @Override
-        @NonNull
-        public MethodCallExpression transformStep(@NonNull ModelASTStep step, @NonNull MethodCallExpression methodCall) {
-            if (step.getName().equals("timeout")) {
-                ArgumentListExpression newArgs = new ArgumentListExpression();
-                TupleExpression oldArgs = (TupleExpression)methodCall.getArguments();
+  @TestExtension
+  public static class TimeoutTransformer extends StepRuntimeTransformerContributor {
+    @Override
+    @NonNull
+    public MethodCallExpression transformStep(
+        @NonNull ModelASTStep step, @NonNull MethodCallExpression methodCall) {
+      if (step.getName().equals("timeout")) {
+        ArgumentListExpression newArgs = new ArgumentListExpression();
+        TupleExpression oldArgs = (TupleExpression) methodCall.getArguments();
 
-                for (Expression expr : oldArgs.getExpressions()) {
-                    if (expr instanceof MapExpression) {
-                        MapExpression originalMap = (MapExpression) expr;
-                        MapExpression newMap = new MapExpression();
+        for (Expression expr : oldArgs.getExpressions()) {
+          if (expr instanceof MapExpression) {
+            MapExpression originalMap = (MapExpression) expr;
+            MapExpression newMap = new MapExpression();
 
-                        for (MapEntryExpression origEntry : originalMap.getMapEntryExpressions()) {
-                            if (origEntry.getKeyExpression() instanceof ConstantExpression &&
-                                    ((ConstantExpression) origEntry.getKeyExpression()).getValue().equals("time")) {
-                                newMap.addMapEntryExpression(constX("time"), constX(10));
-                            } else {
-                                newMap.addMapEntryExpression(origEntry);
-                            }
-                        }
-                        newArgs.addExpression(newMap);
-                    } else {
-                        newArgs.addExpression(expr);
-                    }
-                }
-                methodCall.setArguments(newArgs);
+            for (MapEntryExpression origEntry : originalMap.getMapEntryExpressions()) {
+              if (origEntry.getKeyExpression() instanceof ConstantExpression
+                  && ((ConstantExpression) origEntry.getKeyExpression())
+                      .getValue()
+                      .equals("time")) {
+                newMap.addMapEntryExpression(constX("time"), constX(10));
+              } else {
+                newMap.addMapEntryExpression(origEntry);
+              }
             }
-
-            return methodCall;
+            newArgs.addExpression(newMap);
+          } else {
+            newArgs.addExpression(expr);
+          }
         }
+        methodCall.setArguments(newArgs);
+      }
+
+      return methodCall;
     }
+  }
 }

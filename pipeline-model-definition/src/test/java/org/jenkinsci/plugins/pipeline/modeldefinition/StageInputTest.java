@@ -24,6 +24,8 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import static org.junit.Assert.*;
+
 import com.gargoylesoftware.htmlunit.html.*;
 import hudson.model.queue.QueueTaskFuture;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
@@ -33,215 +35,228 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.input.InputAction;
 import org.jenkinsci.plugins.workflow.support.steps.input.InputStepExecution;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.junit.Assert.*;
-
 public class StageInputTest extends AbstractModelDefTest {
 
-    @Issue("JENKINS-48379")
-    @Test
-    public void simpleInput() throws Exception {
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "simpleInput");
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleInput"), true));
-        // get the build going, and wait until workflow pauses
-        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
-        WorkflowRun b = q.getStartCondition().get();
-        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+  @Issue("JENKINS-48379")
+  @Test
+  public void simpleInput() throws Exception {
+    WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "simpleInput");
+    p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleInput"), true));
+    // get the build going, and wait until workflow pauses
+    QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+    WorkflowRun b = q.getStartCondition().get();
+    CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
 
-        while (b.getAction(InputAction.class)==null) {
-            e.waitForSuspension();
-        }
-
-        // make sure we are pausing at the right state that reflects what we wrote in the program
-        InputAction a = b.getAction(InputAction.class);
-        assertEquals(1, a.getExecutions().size());
-
-        InputStepExecution is = a.getExecution("Foo");
-        assertEquals("Continue?", is.getInput().getMessage());
-        assertEquals(0, is.getInput().getParameters().size());
-        assertNull(is.getInput().getSubmitter());
-
-        JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage page = wc.getPage(b, a.getUrlName());
-        j.submit(page.getFormByName(is.getId()), "proceed");
-        assertEquals(0, a.getExecutions().size());
-        q.get();
-
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-
-        j.assertLogContains("hello", b);
+    while (b.getAction(InputAction.class) == null) {
+      e.waitForSuspension();
     }
 
-    @Test
-    public void simpleInputWithOutsideVarAndFunc() throws Exception {
-        // this should have same behavior whether script splitting is enable or not
-        RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
+    // make sure we are pausing at the right state that reflects what we wrote in the program
+    InputAction a = b.getAction(InputAction.class);
+    assertEquals(1, a.getExecutions().size());
 
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "simpleInputWithOutsideVarAndFunc");
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("simpleInputWithOutsideVarAndFunc"), true));
-        // get the build going, and wait until workflow pauses
-        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
-        WorkflowRun b = q.getStartCondition().get();
-        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+    InputStepExecution is = a.getExecution("Foo");
+    assertEquals("Continue?", is.getInput().getMessage());
+    assertEquals(0, is.getInput().getParameters().size());
+    assertNull(is.getInput().getSubmitter());
 
-        while (b.getAction(InputAction.class) == null) {
-            e.waitForSuspension();
-        }
+    JenkinsRule.WebClient wc = j.createWebClient();
+    HtmlPage page = wc.getPage(b, a.getUrlName());
+    j.submit(page.getFormByName(is.getId()), "proceed");
+    assertEquals(0, a.getExecutions().size());
+    q.get();
 
-        // make sure we are pausing at the right state that reflects what we wrote in the program
-        InputAction a = b.getAction(InputAction.class);
-        assertEquals(1, a.getExecutions().size());
+    j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
-        InputStepExecution is = a.getExecution("Foo");
-        assertEquals("Continue?", is.getInput().getMessage());
-        assertEquals(0, is.getInput().getParameters().size());
-        assertNull(is.getInput().getSubmitter());
+    j.assertLogContains("hello", b);
+  }
 
-        JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage page = wc.getPage(b, a.getUrlName());
-        j.submit(page.getFormByName(is.getId()), "proceed");
-        assertEquals(0, a.getExecutions().size());
-        q.get();
+  @Test
+  public void simpleInputWithOutsideVarAndFunc() throws Exception {
+    // this should have same behavior whether script splitting is enable or not
+    RuntimeASTTransformer.SCRIPT_SPLITTING_ALLOW_LOCAL_VARIABLES = true;
 
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+    WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "simpleInputWithOutsideVarAndFunc");
+    p.setDefinition(
+        new CpsFlowDefinition(
+            pipelineSourceFromResources("simpleInputWithOutsideVarAndFunc"), true));
+    // get the build going, and wait until workflow pauses
+    QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+    WorkflowRun b = q.getStartCondition().get();
+    CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
 
-        j.assertLogContains("hello", b);
+    while (b.getAction(InputAction.class) == null) {
+      e.waitForSuspension();
     }
 
-    @Issue("JENKINS-48379")
-    @Test
-    public void parametersInInput() throws Exception {
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "parametersInInput");
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("parametersInInput"), true));
-        // get the build going, and wait until workflow pauses
-        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
-        WorkflowRun b = q.getStartCondition().get();
-        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+    // make sure we are pausing at the right state that reflects what we wrote in the program
+    InputAction a = b.getAction(InputAction.class);
+    assertEquals(1, a.getExecutions().size());
 
-        while (b.getAction(InputAction.class)==null) {
-            e.waitForSuspension();
-        }
+    InputStepExecution is = a.getExecution("Foo");
+    assertEquals("Continue?", is.getInput().getMessage());
+    assertEquals(0, is.getInput().getParameters().size());
+    assertNull(is.getInput().getSubmitter());
 
-        // make sure we are pausing at the right state that reflects what we wrote in the program
-        InputAction a = b.getAction(InputAction.class);
-        assertEquals(1, a.getExecutions().size());
+    JenkinsRule.WebClient wc = j.createWebClient();
+    HtmlPage page = wc.getPage(b, a.getUrlName());
+    j.submit(page.getFormByName(is.getId()), "proceed");
+    assertEquals(0, a.getExecutions().size());
+    q.get();
 
-        InputStepExecution is = a.getExecution("Simple-input");
-        assertEquals("Continue?", is.getInput().getMessage());
-        assertEquals(2, is.getInput().getParameters().size());
-        assertNull(is.getInput().getSubmitter());
+    j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
-        JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage page = wc.getPage(b, a.getUrlName());
-        HtmlForm form = page.getFormByName(is.getId());
+    j.assertLogContains("hello", b);
+  }
 
-        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='fruit'] | //div[div/div/input/@value='fruit']");
-        assertNotNull(element);
+  @Issue("JENKINS-48379")
+  @Test
+  public void parametersInInput() throws Exception {
+    WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "parametersInInput");
+    p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("parametersInInput"), true));
+    // get the build going, and wait until workflow pauses
+    QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+    WorkflowRun b = q.getStartCondition().get();
+    CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
 
-        HtmlTextInput stringParameterInput = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
-        assertEquals("banana", stringParameterInput.getAttribute("value"));
-        assertEquals("fruit", ((HtmlElement) DomNodeUtil.selectSingleNode(element, "td[@class='setting-name'] | div[contains(@class,'setting-name')]")).getTextContent());
-        stringParameterInput.setAttribute("value", "pear");
-
-        element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
-        assertNotNull(element);
-
-        Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
-
-        HtmlCheckBoxInput booleanParameterInput = (HtmlCheckBoxInput) o;
-        booleanParameterInput.setChecked(false);
-
-        j.submit(page.getFormByName(is.getId()), "proceed");
-        assertEquals(0, a.getExecutions().size());
-        q.get();
-
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
-
-        j.assertLogContains("Would I like to eat a pear? false", b);
+    while (b.getAction(InputAction.class) == null) {
+      e.waitForSuspension();
     }
 
-    @Issue("JENKINS-48379")
-    @Test
-    public void singleParameterInInput() throws Exception {
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "singleParameterInInput");
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("singleParameterInInput"), true));
-        // get the build going, and wait until workflow pauses
-        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
-        WorkflowRun b = q.getStartCondition().get();
-        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+    // make sure we are pausing at the right state that reflects what we wrote in the program
+    InputAction a = b.getAction(InputAction.class);
+    assertEquals(1, a.getExecutions().size());
 
-        while (b.getAction(InputAction.class)==null) {
-            e.waitForSuspension();
-        }
+    InputStepExecution is = a.getExecution("Simple-input");
+    assertEquals("Continue?", is.getInput().getMessage());
+    assertEquals(2, is.getInput().getParameters().size());
+    assertNull(is.getInput().getSubmitter());
 
-        // make sure we are pausing at the right state that reflects what we wrote in the program
-        InputAction a = b.getAction(InputAction.class);
-        assertEquals(1, a.getExecutions().size());
+    JenkinsRule.WebClient wc = j.createWebClient();
+    HtmlPage page = wc.getPage(b, a.getUrlName());
+    HtmlForm form = page.getFormByName(is.getId());
 
-        InputStepExecution is = a.getExecution("Simple-input");
-        assertEquals("Continue?", is.getInput().getMessage());
-        assertEquals(1, is.getInput().getParameters().size());
-        assertNull(is.getInput().getSubmitter());
+    HtmlElement element =
+        DomNodeUtil.selectSingleNode(
+            form, "//tr[td/div/input/@value='fruit'] | //div[div/div/input/@value='fruit']");
+    assertNotNull(element);
 
-        JenkinsRule.WebClient wc = j.createWebClient();
-        HtmlPage page = wc.getPage(b, a.getUrlName());
-        HtmlForm form = page.getFormByName(is.getId());
+    HtmlTextInput stringParameterInput =
+        DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
+    assertEquals("banana", stringParameterInput.getAttribute("value"));
+    assertEquals(
+        "fruit",
+        ((HtmlElement)
+                DomNodeUtil.selectSingleNode(
+                    element, "td[@class='setting-name'] | div[contains(@class,'setting-name')]"))
+            .getTextContent());
+    stringParameterInput.setAttribute("value", "pear");
 
-        HtmlElement element = DomNodeUtil.selectSingleNode(form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
-        assertNotNull(element);
+    element =
+        DomNodeUtil.selectSingleNode(
+            form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
+    assertNotNull(element);
 
-        Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
+    Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
 
-        HtmlCheckBoxInput booleanParameterInput = (HtmlCheckBoxInput) o;
-        booleanParameterInput.setChecked(false);
+    HtmlCheckBoxInput booleanParameterInput = (HtmlCheckBoxInput) o;
+    booleanParameterInput.setChecked(false);
 
-        j.submit(page.getFormByName(is.getId()), "proceed");
-        assertEquals(0, a.getExecutions().size());
-        q.get();
+    j.submit(page.getFormByName(is.getId()), "proceed");
+    assertEquals(0, a.getExecutions().size());
+    q.get();
 
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+    j.assertBuildStatusSuccess(j.waitForCompletion(b));
 
-        j.assertLogContains("Would I like to eat? false", b);
+    j.assertLogContains("Would I like to eat a pear? false", b);
+  }
+
+  @Issue("JENKINS-48379")
+  @Test
+  public void singleParameterInInput() throws Exception {
+    WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "singleParameterInInput");
+    p.setDefinition(
+        new CpsFlowDefinition(pipelineSourceFromResources("singleParameterInInput"), true));
+    // get the build going, and wait until workflow pauses
+    QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+    WorkflowRun b = q.getStartCondition().get();
+    CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+    while (b.getAction(InputAction.class) == null) {
+      e.waitForSuspension();
     }
 
-    @Issue("JENKINS-48379")
-    @Test
-    public void submitterParameterInInput() throws Exception {
-        j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+    // make sure we are pausing at the right state that reflects what we wrote in the program
+    InputAction a = b.getAction(InputAction.class);
+    assertEquals(1, a.getExecutions().size());
 
-        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "submitterParameterInInput");
-        p.setDefinition(new CpsFlowDefinition(pipelineSourceFromResources("submitterParameterInInput"), true));
-        // get the build going, and wait until workflow pauses
-        QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
-        WorkflowRun b = q.getStartCondition().get();
-        CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+    InputStepExecution is = a.getExecution("Simple-input");
+    assertEquals("Continue?", is.getInput().getMessage());
+    assertEquals(1, is.getInput().getParameters().size());
+    assertNull(is.getInput().getSubmitter());
 
-        while (b.getAction(InputAction.class)==null) {
-            e.waitForSuspension();
-        }
+    JenkinsRule.WebClient wc = j.createWebClient();
+    HtmlPage page = wc.getPage(b, a.getUrlName());
+    HtmlForm form = page.getFormByName(is.getId());
 
-        // make sure we are pausing at the right state that reflects what we wrote in the program
-        InputAction a = b.getAction(InputAction.class);
-        assertEquals(1, a.getExecutions().size());
+    HtmlElement element =
+        DomNodeUtil.selectSingleNode(
+            form, "//tr[td/div/input/@value='flag'] | //div[div/div/input/@value='flag']");
+    assertNotNull(element);
 
-        InputStepExecution is = a.getExecution("Simple-input");
-        assertEquals("Continue?", is.getInput().getMessage());
-        assertEquals(0, is.getInput().getParameters().size());
-        assertEquals("alice", is.getInput().getSubmitter());
+    Object o = DomNodeUtil.selectSingleNode(element, ".//input[@name='value']");
 
-        JenkinsRule.WebClient wc = j.createWebClient();
-        wc.login("alice");
-        HtmlPage page = wc.getPage(b, a.getUrlName());
-        j.submit(page.getFormByName(is.getId()), "proceed");
-        assertEquals(0, a.getExecutions().size());
-        q.get();
+    HtmlCheckBoxInput booleanParameterInput = (HtmlCheckBoxInput) o;
+    booleanParameterInput.setChecked(false);
 
-        j.assertBuildStatusSuccess(j.waitForCompletion(b));
+    j.submit(page.getFormByName(is.getId()), "proceed");
+    assertEquals(0, a.getExecutions().size());
+    q.get();
 
-        j.assertLogContains("Who approved? alice", b);
+    j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+    j.assertLogContains("Would I like to eat? false", b);
+  }
+
+  @Issue("JENKINS-48379")
+  @Test
+  public void submitterParameterInInput() throws Exception {
+    j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+
+    WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "submitterParameterInInput");
+    p.setDefinition(
+        new CpsFlowDefinition(pipelineSourceFromResources("submitterParameterInInput"), true));
+    // get the build going, and wait until workflow pauses
+    QueueTaskFuture<WorkflowRun> q = p.scheduleBuild2(0);
+    WorkflowRun b = q.getStartCondition().get();
+    CpsFlowExecution e = (CpsFlowExecution) b.getExecutionPromise().get();
+
+    while (b.getAction(InputAction.class) == null) {
+      e.waitForSuspension();
     }
+
+    // make sure we are pausing at the right state that reflects what we wrote in the program
+    InputAction a = b.getAction(InputAction.class);
+    assertEquals(1, a.getExecutions().size());
+
+    InputStepExecution is = a.getExecution("Simple-input");
+    assertEquals("Continue?", is.getInput().getMessage());
+    assertEquals(0, is.getInput().getParameters().size());
+    assertEquals("alice", is.getInput().getSubmitter());
+
+    JenkinsRule.WebClient wc = j.createWebClient();
+    wc.login("alice");
+    HtmlPage page = wc.getPage(b, a.getUrlName());
+    j.submit(page.getFormByName(is.getId()), "proceed");
+    assertEquals(0, a.getExecutions().size());
+    q.get();
+
+    j.assertBuildStatusSuccess(j.waitForCompletion(b));
+
+    j.assertLogContains("Who approved? alice", b);
+  }
 }

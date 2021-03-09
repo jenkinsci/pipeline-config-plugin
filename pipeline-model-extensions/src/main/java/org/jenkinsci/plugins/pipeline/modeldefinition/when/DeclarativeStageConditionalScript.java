@@ -28,11 +28,11 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScrip
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
 public abstract class DeclarativeStageConditionalScript<S extends DeclarativeStageConditional<S>>
-        extends WithScriptScript<S> {
+    extends WithScriptScript<S> {
 
-    public DeclarativeStageConditionalScript(CpsScript s, S c) {
-        super(s, c);
-    }
+  public DeclarativeStageConditionalScript(CpsScript s, S c) {
+    super(s, c);
+  }
 
-    public abstract boolean evaluate();
+  public abstract boolean evaluate();
 }

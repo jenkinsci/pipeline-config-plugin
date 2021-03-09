@@ -26,97 +26,97 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-
-import org.apache.commons.lang.StringUtils;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Represents the special step which are executed without validation against the declarative subset.
+ *
  * @see ModelASTScriptBlock
  * @see ModelASTWhenExpression
  */
 public abstract class AbstractModelASTCodeBlock extends ModelASTStep {
 
-    protected AbstractModelASTCodeBlock(Object sourceLocation, String name) {
-        super(sourceLocation);
-        this.setName(name);
-    }
+  protected AbstractModelASTCodeBlock(Object sourceLocation, String name) {
+    super(sourceLocation);
+    this.setName(name);
+  }
 
-    @Override
-    @NonNull
-    public String toGroovy() {
-        StringBuilder result = new StringBuilder(getName()).append(" {\n");
-        result.append(codeBlockAsString());
-        result.append("\n}\n");
-        return result.toString();
-    }
+  @Override
+  @NonNull
+  public String toGroovy() {
+    StringBuilder result = new StringBuilder(getName()).append(" {\n");
+    result.append(codeBlockAsString());
+    result.append("\n}\n");
+    return result.toString();
+  }
 
-    public String codeBlockAsString() {
-        if (getArgs() == null) {
-            return null;
-        } else if (isLiteralSingleArg()) {
-            Object v = getSingleValue().getValue();
-            if (v instanceof String) {
-                List<String> retList = new ArrayList<>();
-                for (String s : v.toString().split("\\r?\\n")) {
-                    retList.add(s.trim());
-                }
-                return StringUtils.join(retList, "\n");
-            } else {
-                return v.toString();
-            }
-        } else {
-            return getArgs().toGroovy();
+  public String codeBlockAsString() {
+    if (getArgs() == null) {
+      return null;
+    } else if (isLiteralSingleArg()) {
+      Object v = getSingleValue().getValue();
+      if (v instanceof String) {
+        List<String> retList = new ArrayList<>();
+        for (String s : v.toString().split("\\r?\\n")) {
+          retList.add(s.trim());
         }
+        return StringUtils.join(retList, "\n");
+      } else {
+        return v.toString();
+      }
+    } else {
+      return getArgs().toGroovy();
+    }
+  }
+
+  protected ModelASTValue getSingleValue() {
+    if (getArgs() instanceof ModelASTSingleArgument) {
+      return ((ModelASTSingleArgument) getArgs()).getValue();
+    } else if (getArgs() instanceof ModelASTNamedArgumentList) {
+      ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList) getArgs();
+      if (namedArgs.getArguments().size() == 1 && namedArgs.containsKeyName("scriptBlock")) {
+        return namedArgs.valueForName("scriptBlock");
+      }
+    }
+    return null;
+  }
+
+  protected boolean isLiteralSingleArg() {
+    return getArgs() != null && getSingleValue() != null && getSingleValue().isLiteral();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
     }
 
-    protected ModelASTValue getSingleValue() {
-        if (getArgs() instanceof ModelASTSingleArgument) {
-            return ((ModelASTSingleArgument) getArgs()).getValue();
-        } else if (getArgs() instanceof ModelASTNamedArgumentList) {
-            ModelASTNamedArgumentList namedArgs = (ModelASTNamedArgumentList) getArgs();
-            if (namedArgs.getArguments().size() == 1 && namedArgs.containsKeyName("scriptBlock")) {
-                return namedArgs.valueForName("scriptBlock");
-            }
-        }
-        return null;
+    AbstractModelASTCodeBlock that = (AbstractModelASTCodeBlock) o;
+
+    if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
+      return false;
     }
-
-    protected boolean isLiteralSingleArg() {
-        return getArgs() != null
-                && getSingleValue() != null
-                && getSingleValue().isLiteral();
+    if (isLiteralSingleArg() && that.isLiteralSingleArg()) {
+      return codeBlockAsString().equals(that.codeBlockAsString());
+    } else {
+      return getArgs() != null ? getArgs().equals(that.getArgs()) : that.getArgs() == null;
     }
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        AbstractModelASTCodeBlock that = (AbstractModelASTCodeBlock) o;
-
-        if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) {
-            return false;
-        }
-        if (isLiteralSingleArg() && that.isLiteralSingleArg()) {
-            return codeBlockAsString().equals(that.codeBlockAsString());
-        } else {
-            return getArgs() != null ? getArgs().equals(that.getArgs()) : that.getArgs() == null;
-        }
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "{" +
-                "name='" + getName() + '\'' +
-                ", args=" + getArgs() +
-                "}";
-    }
-
+  @Override
+  public String toString() {
+    return getClass().getSimpleName()
+        + "{"
+        + "name='"
+        + getName()
+        + '\''
+        + ", args="
+        + getArgs()
+        + "}";
+  }
 }

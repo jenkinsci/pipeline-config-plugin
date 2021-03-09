@@ -24,6 +24,7 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
@@ -32,47 +33,47 @@ import org.junit.Test;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 public class MultipleUnnamedParametersTest extends AbstractModelDefTest {
 
-    // Note that we're doing this in its own class and not doing JSON validation because of the hassle of the test
-    // extension - we'll get an error due to an unknown option type if we don't have the test extension defined for the
-    // whole class.
+  // Note that we're doing this in its own class and not doing JSON validation because of the hassle
+  // of the test
+  // extension - we'll get an error due to an unknown option type if we don't have the test
+  // extension defined for the
+  // whole class.
 
-    @Test
-    public void tooManyUnnamedParameters() throws Exception {
-        expectError("tooManyUnnamedParameters")
-                .logContains(Messages.ModelValidatorImpl_TooManyUnnamedParameters("multiArgCtorProp"))
-                .go();
+  @Test
+  public void tooManyUnnamedParameters() throws Exception {
+    expectError("tooManyUnnamedParameters")
+        .logContains(Messages.ModelValidatorImpl_TooManyUnnamedParameters("multiArgCtorProp"))
+        .go();
+  }
+
+  public static class MultiArgCtorProp extends JobProperty<Job<?, ?>> {
+    private String first;
+    private int second;
+
+    @DataBoundConstructor
+    public MultiArgCtorProp(String first, int second) {
+      this.first = first;
+      this.second = second;
     }
 
-    public static class MultiArgCtorProp extends JobProperty<Job<?,?>> {
-        private String first;
-        private int second;
-
-        @DataBoundConstructor
-        public MultiArgCtorProp(String first, int second) {
-            this.first = first;
-            this.second = second;
-        }
-
-        public String getFirst() {
-            return first;
-        }
-
-        public int getSecond() {
-            return second;
-        }
-
-        @TestExtension
-        @Symbol("multiArgCtorProp")
-        public static class MultiArgCtorPropDescriptor extends JobPropertyDescriptor {
-            @Override
-            @NonNull
-            public String getDisplayName() {
-                return "Test property with multiple parameters to DataBoundConstructor";
-            }
-        }
+    public String getFirst() {
+      return first;
     }
+
+    public int getSecond() {
+      return second;
+    }
+
+    @TestExtension
+    @Symbol("multiArgCtorProp")
+    public static class MultiArgCtorPropDescriptor extends JobPropertyDescriptor {
+      @Override
+      @NonNull
+      public String getDisplayName() {
+        return "Test property with multiple parameters to DataBoundConstructor";
+      }
+    }
+  }
 }

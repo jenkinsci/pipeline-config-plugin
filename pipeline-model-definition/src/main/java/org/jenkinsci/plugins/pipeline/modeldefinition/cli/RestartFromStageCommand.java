@@ -38,50 +38,68 @@ import org.kohsuke.args4j.spi.Setter;
 
 @Extension
 public class RestartFromStageCommand extends CLICommand {
-    @Option(required=true, name="-j", aliases="--job", metaVar="JOB", usage="Name of the job to restart.", handler=RestartFromStageCommand.JobHandler.class)
-    public Job<?,?> job;
+  @Option(
+      required = true,
+      name = "-j",
+      aliases = "--job",
+      metaVar = "JOB",
+      usage = "Name of the job to restart.",
+      handler = RestartFromStageCommand.JobHandler.class)
+  public Job<?, ?> job;
 
-    @Option(required=true, name="-s", aliases="--stage", metaVar="STAGE", usage="Stage to restart from.")
-    public String stage;
+  @Option(
+      required = true,
+      name = "-s",
+      aliases = "--stage",
+      metaVar = "STAGE",
+      usage = "Stage to restart from.")
+  public String stage;
 
-    @Option(name="-n", aliases="--number", metaVar="BUILD#", usage="Build to restart, if not the last.")
-    public int number;
+  @Option(
+      name = "-n",
+      aliases = "--number",
+      metaVar = "BUILD#",
+      usage = "Build to restart, if not the last.")
+  public int number;
 
-    @Override
-    public String getShortDescription() {
-        return Messages.RestartFromStageCommand_ShortDescription();
+  @Override
+  public String getShortDescription() {
+    return Messages.RestartFromStageCommand_ShortDescription();
+  }
+
+  @Override
+  protected int run() throws Exception {
+    Run<?, ?> run = number <= 0 ? job.getLastBuild() : job.getBuildByNumber(number);
+    if (run == null) {
+      throw new AbortException("No such build");
+    }
+    RestartDeclarativePipelineAction action = run.getAction(RestartDeclarativePipelineAction.class);
+    if (action == null) {
+      throw new AbortException("Not a Declarative Pipeline build");
+    }
+    if (!action.isRestartEnabled()) {
+      throw new AbortException("Not authorized to restart builds of this job");
+    }
+    if (!action.getRestartableStages().contains(stage)) {
+      throw new AbortException(
+          "Stage "
+              + stage
+              + " either does not exist in the build, or did not run in the build, and so cannot be restarted.");
+    }
+    action.run(stage);
+    return 0;
+  }
+
+  @SuppressWarnings("rawtypes")
+  public static class JobHandler extends GenericItemOptionHandler<Job> {
+
+    public JobHandler(CmdLineParser parser, OptionDef option, Setter<Job> setter) {
+      super(parser, option, setter);
     }
 
     @Override
-    protected int run() throws Exception {
-        Run<?,?> run = number <= 0 ? job.getLastBuild() : job.getBuildByNumber(number);
-        if (run == null) {
-            throw new AbortException("No such build");
-        }
-        RestartDeclarativePipelineAction action = run.getAction(RestartDeclarativePipelineAction.class);
-        if (action == null) {
-            throw new AbortException("Not a Declarative Pipeline build");
-        }
-        if (!action.isRestartEnabled()) {
-            throw new AbortException("Not authorized to restart builds of this job");
-        }
-        if (!action.getRestartableStages().contains(stage)) {
-            throw new AbortException("Stage " + stage + " either does not exist in the build, or did not run in the build, and so cannot be restarted.");
-        }
-        action.run(stage);
-        return 0;
+    protected Class<Job> type() {
+      return Job.class;
     }
-
-    @SuppressWarnings("rawtypes")
-    public static class JobHandler extends GenericItemOptionHandler<Job> {
-
-        public JobHandler(CmdLineParser parser, OptionDef option, Setter<Job> setter) {
-            super(parser, option, setter);
-        }
-
-        @Override protected Class<Job> type() {
-            return Job.class;
-        }
-
-    }
+  }
 }

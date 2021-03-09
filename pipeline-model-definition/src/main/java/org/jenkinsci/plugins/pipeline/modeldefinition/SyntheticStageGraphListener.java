@@ -24,9 +24,17 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import static java.util.logging.Level.WARNING;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Actionable;
 import hudson.model.InvisibleAction;
+import java.io.IOException;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
 import org.jenkinsci.plugins.pipeline.modeldefinition.actions.ExecutionModelAction;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
@@ -38,78 +46,70 @@ import org.jenkinsci.plugins.workflow.flow.GraphListener;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.IOException;
-import java.util.Map;
-import java.util.WeakHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static java.util.logging.Level.WARNING;
-
 @Extension
 public final class SyntheticStageGraphListener implements GraphListener {
-    private static final Logger LOGGER = Logger.getLogger(SyntheticStageGraphListener.class.getName());
+  private static final Logger LOGGER =
+      Logger.getLogger(SyntheticStageGraphListener.class.getName());
 
-    private final transient Map<FlowExecution,Boolean> declarativeRuns = new WeakHashMap<>();
+  private final transient Map<FlowExecution, Boolean> declarativeRuns = new WeakHashMap<>();
 
-    @Override
-    public void onNewHead(FlowNode node) {
-        if (node != null && node instanceof StepStartNode &&
-                ((StepStartNode) node).getDescriptor() instanceof StageStep.DescriptorImpl) {
-            if (isDeclarativeRun(node.getExecution())) {
-                LabelAction label = node.getAction(LabelAction.class);
-                if (label != null &&
-                        (SyntheticStageNames.preStages().contains(label.getDisplayName()) ||
-                                SyntheticStageNames.postStages().contains(label.getDisplayName()))) {
-                    if (SyntheticStageNames.preStages().contains(label.getDisplayName())) {
-                        attachTag(node, SyntheticStage.getPre());
-                    }
-                    if (SyntheticStageNames.postStages().contains(label.getDisplayName())) {
-                        attachTag(node, SyntheticStage.getPost());
-                    }
-                }
-            }
+  @Override
+  public void onNewHead(FlowNode node) {
+    if (node != null
+        && node instanceof StepStartNode
+        && ((StepStartNode) node).getDescriptor() instanceof StageStep.DescriptorImpl) {
+      if (isDeclarativeRun(node.getExecution())) {
+        LabelAction label = node.getAction(LabelAction.class);
+        if (label != null
+            && (SyntheticStageNames.preStages().contains(label.getDisplayName())
+                || SyntheticStageNames.postStages().contains(label.getDisplayName()))) {
+          if (SyntheticStageNames.preStages().contains(label.getDisplayName())) {
+            attachTag(node, SyntheticStage.getPre());
+          }
+          if (SyntheticStageNames.postStages().contains(label.getDisplayName())) {
+            attachTag(node, SyntheticStage.getPost());
+          }
         }
+      }
     }
+  }
 
-    private void attachTag(FlowNode currentNode, String syntheticContext) {
-        TagsAction tagsAction = currentNode.getAction(TagsAction.class);
-        if (tagsAction == null) {
-            tagsAction = new TagsAction();
-            tagsAction.addTag(SyntheticStage.TAG_NAME, syntheticContext);
-            currentNode.addAction(tagsAction);
-        } else if (tagsAction.getTagValue(SyntheticStage.TAG_NAME) == null) {
-            tagsAction.addTag(SyntheticStage.TAG_NAME, syntheticContext);
-            try {
-                currentNode.save();
-            } catch (IOException e) {
-                LOGGER.log(WARNING, "failed to save actions for FlowNode id=" + currentNode.getId(), e);
-            }
+  private void attachTag(FlowNode currentNode, String syntheticContext) {
+    TagsAction tagsAction = currentNode.getAction(TagsAction.class);
+    if (tagsAction == null) {
+      tagsAction = new TagsAction();
+      tagsAction.addTag(SyntheticStage.TAG_NAME, syntheticContext);
+      currentNode.addAction(tagsAction);
+    } else if (tagsAction.getTagValue(SyntheticStage.TAG_NAME) == null) {
+      tagsAction.addTag(SyntheticStage.TAG_NAME, syntheticContext);
+      try {
+        currentNode.save();
+      } catch (IOException e) {
+        LOGGER.log(WARNING, "failed to save actions for FlowNode id=" + currentNode.getId(), e);
+      }
+    }
+  }
+
+  private synchronized boolean isDeclarativeRun(@NonNull FlowExecution execution) {
+    if (!declarativeRuns.containsKey(execution)) {
+      boolean isDeclarative = false;
+      try {
+        FlowExecutionOwner owner = execution.getOwner();
+        if (owner != null && owner.getExecutable() instanceof Actionable) {
+          if (((Actionable) owner.getExecutable()).getAction(ExecutionModelAction.class) != null) {
+            isDeclarative = true;
+          }
         }
+      } catch (IOException e) {
+        LOGGER.log(Level.WARNING, "Error loading WorkflowRun for FlowNode: {0}", e);
+      }
+
+      declarativeRuns.put(execution, isDeclarative);
     }
 
-    private synchronized boolean isDeclarativeRun(@NonNull FlowExecution execution) {
-        if (!declarativeRuns.containsKey(execution)) {
-            boolean isDeclarative = false;
-            try {
-                FlowExecutionOwner owner = execution.getOwner();
-                if (owner != null && owner.getExecutable() instanceof Actionable) {
-                    if (((Actionable) owner.getExecutable()).getAction(ExecutionModelAction.class) != null) {
-                        isDeclarative = true;
-                    }
-                }
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Error loading WorkflowRun for FlowNode: {0}", e);
-            }
+    return declarativeRuns.get(execution);
+  }
 
-            declarativeRuns.put(execution, isDeclarative);
-        }
-
-        return declarativeRuns.get(execution);
-    }
-
-    @Deprecated
-    public static class GraphListenerAction extends InvisibleAction {
-    }
+  @Deprecated
+  public static class GraphListenerAction extends InvisibleAction {}
 }

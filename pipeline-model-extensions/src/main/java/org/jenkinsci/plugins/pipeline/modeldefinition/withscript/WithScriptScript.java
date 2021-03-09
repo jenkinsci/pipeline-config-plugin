@@ -24,19 +24,16 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 
+import java.io.Serializable;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
-import java.io.Serializable;
-
 public abstract class WithScriptScript<T extends WithScriptDescribable<T>> implements Serializable {
-    @Whitelisted
-    protected CpsScript script;
-    @Whitelisted
-    protected T describable;
+  @Whitelisted protected CpsScript script;
+  @Whitelisted protected T describable;
 
-    public WithScriptScript(CpsScript s, T d) {
-        this.script = s;
-        this.describable = d;
-    }
+  public WithScriptScript(CpsScript s, T d) {
+    this.script = s;
+    this.describable = d;
+  }
 }

@@ -24,101 +24,100 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONArray;
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.sf.json.JSONArray;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
  * Represents a map of names to possible method arguments, in closure form in Groovy
  *
  * @author Andrew Bayer
  */
-public final class ModelASTClosureMap extends ModelASTElement implements ModelASTMethodArg, ModelASTElementContainer {
-    private Map<ModelASTKey, ModelASTMethodArg> variables = new LinkedHashMap<>();
+public final class ModelASTClosureMap extends ModelASTElement
+    implements ModelASTMethodArg, ModelASTElementContainer {
+  private Map<ModelASTKey, ModelASTMethodArg> variables = new LinkedHashMap<>();
 
-    public ModelASTClosureMap(Object sourceLocation) {
-        super(sourceLocation);
+  public ModelASTClosureMap(Object sourceLocation) {
+    super(sourceLocation);
+  }
+
+  @Override
+  @NonNull
+  public JSONArray toJSON() {
+    return toJSONArray(variables);
+  }
+
+  @Override
+  public void validate(@NonNull final ModelValidator validator) {
+    // Nothing to immediately validate here
+    validate(validator, variables);
+  }
+
+  @Override
+  @NonNull
+  public String toGroovy() {
+    return toGroovyBlock(null, variables, " ");
+  }
+
+  @Override
+  public void removeSourceLocation() {
+    super.removeSourceLocation();
+    removeSourceLocationsFrom(variables);
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return variables.isEmpty();
+  }
+
+  public Map<ModelASTKey, ModelASTMethodArg> getVariables() {
+    return variables;
+  }
+
+  public void setVariables(Map<ModelASTKey, ModelASTMethodArg> variables) {
+    this.variables = variables;
+  }
+
+  public boolean containsKey(String k) {
+    for (ModelASTKey key : variables.keySet()) {
+      if (key.getKey().equals(k)) {
+        return true;
+      }
     }
 
-    @Override
-    @NonNull
-    public JSONArray toJSON() {
-        return toJSONArray(variables);
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return "ModelASTClosureMap{" + "variables=" + variables + "}";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
     }
 
-    @Override
-    public void validate(@NonNull final ModelValidator validator) {
-        // Nothing to immediately validate here
-        validate(validator, variables);
-    }
+    ModelASTClosureMap that = (ModelASTClosureMap) o;
 
-    @Override
-    @NonNull
-    public String toGroovy() {
-        return toGroovyBlock(null, variables, " ");
-    }
+    return getVariables() != null
+        ? getVariables().equals(that.getVariables())
+        : that.getVariables() == null;
+  }
 
-    @Override
-    public void removeSourceLocation() {
-        super.removeSourceLocation();
-        removeSourceLocationsFrom(variables);
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return variables.isEmpty();
-    }
-
-    public Map<ModelASTKey, ModelASTMethodArg> getVariables() {
-        return variables;
-    }
-
-    public void setVariables(Map<ModelASTKey, ModelASTMethodArg> variables) {
-        this.variables = variables;
-    }
-
-    public boolean containsKey(String k) {
-        for (ModelASTKey key : variables.keySet()) {
-            if (key.getKey().equals(k)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    @Override
-    public String toString() {
-        return "ModelASTClosureMap{" +
-                "variables=" + variables +
-                "}";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-
-        ModelASTClosureMap that = (ModelASTClosureMap) o;
-
-        return getVariables() != null ? getVariables().equals(that.getVariables()) : that.getVariables() == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (getVariables() != null ? getVariables().hashCode() : 0);
-        return result;
-    }
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (getVariables() != null ? getVariables().hashCode() : 0);
+    return result;
+  }
 }

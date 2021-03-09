@@ -24,25 +24,24 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
+import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditional;
 
-/**
- * Match all of a list of stage conditions
- */
-public abstract class AbstractConditionalWithChildren<C extends AbstractConditionalWithChildren<C>> extends DeclarativeStageConditional<C> {
-    private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children;
+/** Match all of a list of stage conditions */
+public abstract class AbstractConditionalWithChildren<C extends AbstractConditionalWithChildren<C>>
+    extends DeclarativeStageConditional<C> {
+  private final List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children;
 
-    public AbstractConditionalWithChildren(List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
-        this.children = children != null ? children : new ArrayList<>();
-    }
+  public AbstractConditionalWithChildren(
+      List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> children) {
+    this.children = children != null ? children : new ArrayList<>();
+  }
 
-    @Override
-    @NonNull
-    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
-        return children;
-    }
+  @Override
+  @NonNull
+  public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
+    return children;
+  }
 }

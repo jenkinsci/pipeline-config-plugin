@@ -24,38 +24,38 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 public class SkipDefaultCheckout extends DeclarativeOption {
-    private Boolean skipDefaultCheckout;
+  private Boolean skipDefaultCheckout;
 
-    @DataBoundConstructor
-    public SkipDefaultCheckout(@Nullable Boolean skipDefaultCheckout) {
-        this.skipDefaultCheckout = skipDefaultCheckout;
+  @DataBoundConstructor
+  public SkipDefaultCheckout(@Nullable Boolean skipDefaultCheckout) {
+    this.skipDefaultCheckout = skipDefaultCheckout;
+  }
+
+  public boolean isSkipDefaultCheckout() {
+    return skipDefaultCheckout == null || skipDefaultCheckout;
+  }
+
+  @Extension
+  @Symbol("skipDefaultCheckout")
+  public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Skip the default automatic checkout whenever entering a new agent";
     }
 
-    public boolean isSkipDefaultCheckout() {
-        return skipDefaultCheckout == null || skipDefaultCheckout;
+    @Override
+    public boolean canUseInStage() {
+      return true;
     }
-
-    @Extension @Symbol("skipDefaultCheckout")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Skip the default automatic checkout whenever entering a new agent";
-        }
-
-        @Override
-        public boolean canUseInStage() {
-            return true;
-        }
-    }
+  }
 }

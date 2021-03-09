@@ -26,13 +26,13 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.options;
 
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
-
 import java.io.Serializable;
 
-public abstract class DeclarativeOption extends AbstractDescribableImpl<DeclarativeOption> implements Serializable, ExtensionPoint {
+public abstract class DeclarativeOption extends AbstractDescribableImpl<DeclarativeOption>
+    implements Serializable, ExtensionPoint {
 
-    @Override
-    public DeclarativeOptionDescriptor getDescriptor() {
-        return (DeclarativeOptionDescriptor) super.getDescriptor();
-    }
+  @Override
+  public DeclarativeOptionDescriptor getDescriptor() {
+    return (DeclarativeOptionDescriptor) super.getDescriptor();
+  }
 }

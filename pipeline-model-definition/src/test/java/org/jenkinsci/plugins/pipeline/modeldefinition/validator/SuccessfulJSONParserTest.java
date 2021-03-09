@@ -23,6 +23,11 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.AbstractModelDefTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
@@ -33,42 +38,37 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 @RunWith(Parameterized.class)
 public class SuccessfulJSONParserTest extends BaseParserLoaderTest {
-    private String configName;
+  private String configName;
 
-    public SuccessfulJSONParserTest(String configName) {
-        this.configName = configName;
+  public SuccessfulJSONParserTest(String configName) {
+    this.configName = configName;
+  }
+
+  @Parameterized.Parameters(name = "Name: {0}")
+  public static Iterable<Object[]> generateParameters() {
+    List<Object[]> result = new ArrayList<>();
+    for (String c : AbstractModelDefTest.SHOULD_PASS_CONFIGS) {
+      result.add(new Object[] {c});
+    }
+    for (String c : AbstractModelDefTest.CONVERT_ONLY_SHOULD_PASS_CONFIGS) {
+      result.add(new Object[] {c});
     }
 
-    @Parameterized.Parameters(name="Name: {0}")
-    public static Iterable<Object[]> generateParameters() {
-        List<Object[]> result = new ArrayList<>();
-        for (String c : AbstractModelDefTest.SHOULD_PASS_CONFIGS) {
-            result.add(new Object[] { c });
-        }
-        for (String c : AbstractModelDefTest.CONVERT_ONLY_SHOULD_PASS_CONFIGS) {
-            result.add(new Object[]{c});
-        }
+    return result;
+  }
 
-        return result;
-    }
+  @Test
+  public void parseAndValidateJSON() throws Exception {
+    JSONObject json =
+        JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
+    assertNotNull("Couldn't parse JSON for " + configName, json);
 
-    @Test
-    public void parseAndValidateJSON() throws Exception {
-        JSONObject json = JSONObject.fromObject(fileContentsFromResources("json/" + configName + ".json"));
-        assertNotNull("Couldn't parse JSON for " + configName, json);
+    JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(json));
+    ModelASTPipelineDef pipelineDef = jp.parse();
 
-        JSONParser jp = new JSONParser(Converter.jsonTreeFromJSONObject(json));
-        ModelASTPipelineDef pipelineDef = jp.parse();
-
-        assertEquals(getJSONErrorReport(jp, configName), 0, jp.getErrorCollector().getErrorCount());
-        assertNotNull("Pipeline null for " + configName, pipelineDef);
-    }
+    assertEquals(getJSONErrorReport(jp, configName), 0, jp.getErrorCollector().getErrorCount());
+    assertNotNull("Pipeline null for " + configName, pipelineDef);
+  }
 }

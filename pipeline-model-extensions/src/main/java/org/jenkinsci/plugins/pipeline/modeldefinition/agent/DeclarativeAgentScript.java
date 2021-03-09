@@ -27,12 +27,12 @@ import groovy.lang.Closure;
 import org.jenkinsci.plugins.pipeline.modeldefinition.withscript.WithScriptScript;
 import org.jenkinsci.plugins.workflow.cps.CpsScript;
 
+public abstract class DeclarativeAgentScript<A extends DeclarativeAgent<A>>
+    extends WithScriptScript<A> {
 
-public abstract class DeclarativeAgentScript<A extends DeclarativeAgent<A>> extends WithScriptScript<A> {
+  public DeclarativeAgentScript(CpsScript s, A a) {
+    super(s, a);
+  }
 
-    public DeclarativeAgentScript(CpsScript s, A a) {
-        super(s, a);
-    }
-
-    public abstract Closure run(Closure body);
+  public abstract Closure run(Closure body);
 }

@@ -24,9 +24,15 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
+import static groovy.lang.GroovyShell.DEFAULT_CODE_BASE;
+import static org.codehaus.groovy.control.Phases.CONVERSION;
+import static org.junit.Assert.*;
+
 import com.cloudbees.groovy.cps.NonCPS;
 import groovy.lang.GroovyClassLoader;
-import net.sf.json.JSONObject;
+import java.net.URL;
+import java.security.CodeSource;
+import java.security.cert.Certificate;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -44,59 +50,56 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.util.ClassUtils;
 
-import java.net.URL;
-import java.security.CodeSource;
-import java.security.cert.Certificate;
-
-import static groovy.lang.GroovyShell.DEFAULT_CODE_BASE;
-import static org.codehaus.groovy.control.Phases.CONVERSION;
-import static org.junit.Assert.*;
-
 public class ModelParserExternalTest extends AbstractDeclarativeTest {
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
-    @Test
-    public void parseOutsideJenkins() throws Exception {
-        String script = pipelineSourceFromResources("simpleParameters");
+  @Test
+  public void parseOutsideJenkins() throws Exception {
+    String script = pipelineSourceFromResources("simpleParameters");
 
-        ModelASTPipelineDef model = parse(script);
-        assertNotNull(model);
-        assertEquals(1, model.getStages().getStages().size());
-    }
+    ModelASTPipelineDef model = parse(script);
+    assertNotNull(model);
+    assertEquals(1, model.getStages().getStages().size());
+  }
 
-    /**
-     * parse is used to replicate the ModelParser behavior from Converter.groovy outside of Jenkins
-     */
-    private ModelASTPipelineDef parse(String script) throws Exception {
-        CompilerConfiguration cc = GroovySandbox.createBaseCompilerConfiguration();
+  /**
+   * parse is used to replicate the ModelParser behavior from Converter.groovy outside of Jenkins
+   */
+  private ModelASTPipelineDef parse(String script) throws Exception {
+    CompilerConfiguration cc = GroovySandbox.createBaseCompilerConfiguration();
 
-        ImportCustomizer ic = new ImportCustomizer();
-        ic.addStarImports(NonCPS.class.getPackage().getName());
-        ic.addStarImports("hudson.model","jenkins.model");
-        cc.addCompilationCustomizers(ic);
+    ImportCustomizer ic = new ImportCustomizer();
+    ic.addStarImports(NonCPS.class.getPackage().getName());
+    ic.addStarImports("hudson.model", "jenkins.model");
+    cc.addCompilationCustomizers(ic);
 
-        CompilationUnit cu = new CompilationUnit(
-                cc,
-                new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
-                new GroovyClassLoader(ClassUtils.getDefaultClassLoader()));
-        cu.addSource(Converter.getPIPELINE_SCRIPT_NAME(), script);
+    CompilationUnit cu =
+        new CompilationUnit(
+            cc,
+            new CodeSource(new URL("file", "", DEFAULT_CODE_BASE), (Certificate[]) null),
+            new GroovyClassLoader(ClassUtils.getDefaultClassLoader()));
+    cu.addSource(Converter.getPIPELINE_SCRIPT_NAME(), script);
 
-        final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1];
+    final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1];
 
-        cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
-            @Override
-            public void call(SourceUnit source) throws CompilationFailedException {
-                if (model[0] == null) {
-                    ErrorCollector errorCollector = new SourceUnitErrorCollector(source);
-                    ModelValidator validator = new AlwaysTrueValidator();
-                    model[0] = new ModelParser(source, null, errorCollector, validator, new DescriptorLookupCache()).parse(true);
-                }
+    cu.addPhaseOperation(
+        new CompilationUnit.SourceUnitOperation() {
+          @Override
+          public void call(SourceUnit source) throws CompilationFailedException {
+            if (model[0] == null) {
+              ErrorCollector errorCollector = new SourceUnitErrorCollector(source);
+              ModelValidator validator = new AlwaysTrueValidator();
+              model[0] =
+                  new ModelParser(
+                          source, null, errorCollector, validator, new DescriptorLookupCache())
+                      .parse(true);
             }
-        }, CONVERSION);
+          }
+        },
+        CONVERSION);
 
-        cu.compile(CONVERSION);
+    cu.compile(CONVERSION);
 
-        return model[0];
-    }
+    return model[0];
+  }
 }

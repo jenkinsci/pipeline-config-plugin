@@ -33,109 +33,113 @@ import hudson.model.TaskListener;
 import hudson.slaves.NodeSpecific;
 import hudson.tools.ToolDescriptor;
 import hudson.tools.ToolInstallation;
-import org.jenkinsci.plugins.workflow.steps.*;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.jenkinsci.plugins.workflow.steps.*;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * An internal step used to take a tool descriptor ID and tool version and get the environment variables that
- * tool installation would normally contribute, in a {@code List<String>} of {@code "VAR=VALUE"}s suitable
- * for passing to {@code withEnv}.
+ * An internal step used to take a tool descriptor ID and tool version and get the environment
+ * variables that tool installation would normally contribute, in a {@code List<String>} of {@code
+ * "VAR=VALUE"}s suitable for passing to {@code withEnv}.
  *
- * Necessary to do this as a {@link Step} so as to have access to the node, listener and environment.
+ * <p>Necessary to do this as a {@link Step} so as to have access to the node, listener and
+ * environment.
  *
  * @author Andrew Bayer
  */
 public final class EnvVarsForToolStep extends AbstractStepImpl implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    private String toolId;
-    private String toolVersion;
+  private String toolId;
+  private String toolVersion;
 
-    @DataBoundConstructor
-    public EnvVarsForToolStep(String toolId, String toolVersion) {
-        this.toolId = toolId;
-        this.toolVersion = toolVersion;
+  @DataBoundConstructor
+  public EnvVarsForToolStep(String toolId, String toolVersion) {
+    this.toolId = toolId;
+    this.toolVersion = toolVersion;
+  }
+
+  public String getToolVersion() {
+    return toolVersion;
+  }
+
+  public String getToolId() {
+    return toolId;
+  }
+
+  @Extension
+  public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
+
+    public DescriptorImpl() {
+      super(EnvVarsForToolStepExecution.class);
     }
 
-    public String getToolVersion() {
-        return toolVersion;
+    @Override
+    public boolean isAdvanced() {
+      return true;
     }
 
-    public String getToolId() {
-        return toolId;
+    @Override
+    public String getFunctionName() {
+      return "envVarsForTool";
     }
 
-    @Extension
-    public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
-
-        public DescriptorImpl() {
-            super(EnvVarsForToolStepExecution.class);
-        }
-
-        @Override
-        public boolean isAdvanced() {
-            return true;
-        }
-
-        @Override public String getFunctionName() {
-            return "envVarsForTool";
-        }
-
-        @Override public String getDisplayName() {
-            return "Fetches the environment variables for a given tool in a list of 'FOO=bar' strings suitable for the withEnv step.";
-        }
-
-        @Override public boolean takesImplicitBlockArgument() {
-            return false;
-        }
+    @Override
+    public String getDisplayName() {
+      return "Fetches the environment variables for a given tool in a list of 'FOO=bar' strings suitable for the withEnv step.";
     }
 
-    public static final class EnvVarsForToolStepExecution extends AbstractSynchronousNonBlockingStepExecution<List<String>> {
-        @Inject
-        private transient EnvVarsForToolStep step;
+    @Override
+    public boolean takesImplicitBlockArgument() {
+      return false;
+    }
+  }
 
-        @StepContextParameter transient TaskListener listener;
-        @StepContextParameter transient EnvVars env;
-        @StepContextParameter transient Node node;
+  public static final class EnvVarsForToolStepExecution
+      extends AbstractSynchronousNonBlockingStepExecution<List<String>> {
+    @Inject private transient EnvVarsForToolStep step;
 
-        @Override protected List<String> run() throws Exception {
-            String toolVersion = step.getToolVersion();
-            String toolId = step.getToolId();
+    @StepContextParameter transient TaskListener listener;
+    @StepContextParameter transient EnvVars env;
+    @StepContextParameter transient Node node;
 
-            for (ToolDescriptor<?> desc : ToolInstallation.all()) {
-                if (toolId != null && !desc.getId().equals(toolId)) {
-                    continue;
-                }
-                for (ToolInstallation tool : desc.getInstallations()) {
-                    if (tool.getName().equals(toolVersion)) {
-                        if (tool instanceof NodeSpecific) {
-                            tool = (ToolInstallation) ((NodeSpecific<?>) tool).forNode(node, listener);
-                        }
-                        if (tool instanceof EnvironmentSpecific) {
-                            tool = (ToolInstallation) ((EnvironmentSpecific<?>) tool).forEnvironment(env);
-                        }
+    @Override
+    protected List<String> run() throws Exception {
+      String toolVersion = step.getToolVersion();
+      String toolId = step.getToolId();
 
-                        List<String> toolEnvList = new ArrayList<>();
-
-                        EnvVars toolEnv = new EnvVars();
-                        tool.buildEnvVars(toolEnv);
-
-                        for (Map.Entry<String,String> entry: toolEnv.entrySet()) {
-                            toolEnvList.add(entry.getKey() + "=" + entry.getValue());
-                        }
-                        return toolEnvList;
-                    }
-                }
+      for (ToolDescriptor<?> desc : ToolInstallation.all()) {
+        if (toolId != null && !desc.getId().equals(toolId)) {
+          continue;
+        }
+        for (ToolInstallation tool : desc.getInstallations()) {
+          if (tool.getName().equals(toolVersion)) {
+            if (tool instanceof NodeSpecific) {
+              tool = (ToolInstallation) ((NodeSpecific<?>) tool).forNode(node, listener);
             }
-            throw new AbortException("No tool of type " + toolId + " named " + toolVersion + " found");
-        }
+            if (tool instanceof EnvironmentSpecific) {
+              tool = (ToolInstallation) ((EnvironmentSpecific<?>) tool).forEnvironment(env);
+            }
 
-        private static final long serialVersionUID = 1L;
+            List<String> toolEnvList = new ArrayList<>();
+
+            EnvVars toolEnv = new EnvVars();
+            tool.buildEnvVars(toolEnv);
+
+            for (Map.Entry<String, String> entry : toolEnv.entrySet()) {
+              toolEnvList.add(entry.getKey() + "=" + entry.getValue());
+            }
+            return toolEnvList;
+          }
+        }
+      }
+      throw new AbortException("No tool of type " + toolId + " named " + toolVersion + " found");
     }
+
+    private static final long serialVersionUID = 1L;
+  }
 }

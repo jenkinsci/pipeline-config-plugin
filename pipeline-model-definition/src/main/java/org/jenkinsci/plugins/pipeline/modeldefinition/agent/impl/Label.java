@@ -24,6 +24,9 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.Util;
 import hudson.util.FormValidation;
@@ -35,48 +38,44 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-
 public class Label extends DeclarativeAgent<Label> {
-    private String label;
-    private String customWorkspace;
+  private String label;
+  private String customWorkspace;
 
-    @DataBoundConstructor
-    public Label(String label) {
-        // Label *can* be null. That's fine.
-        this.label = label;
+  @DataBoundConstructor
+  public Label(String label) {
+    // Label *can* be null. That's fine.
+    this.label = label;
+  }
+
+  public @Nullable String getLabel() {
+    return label;
+  }
+
+  public @CheckForNull String getCustomWorkspace() {
+    return customWorkspace;
+  }
+
+  @DataBoundSetter
+  public void setCustomWorkspace(String customWorkspace) {
+    this.customWorkspace = customWorkspace;
+  }
+
+  @Extension(ordinal = -800)
+  @Symbol({"label", "node"})
+  public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Run on an agent matching a label";
     }
 
-    public @Nullable String getLabel() {
-        return label;
+    public FormValidation doCheckLabel(@QueryParameter String label) {
+      if (StringUtils.isEmpty(Util.fixEmptyAndTrim(label))) {
+        return FormValidation.error("Label is required.");
+      } else {
+        return FormValidation.ok();
+      }
     }
-
-    public @CheckForNull
-    String getCustomWorkspace() {
-        return customWorkspace;
-    }
-
-    @DataBoundSetter
-    public void setCustomWorkspace(String customWorkspace) {
-        this.customWorkspace = customWorkspace;
-    }
-
-    @Extension(ordinal = -800) @Symbol({"label","node"})
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor<Label> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Run on an agent matching a label";
-        }
-
-        public FormValidation doCheckLabel(@QueryParameter String label) {
-            if (StringUtils.isEmpty(Util.fixEmptyAndTrim(label))) {
-                return FormValidation.error("Label is required.");
-            } else {
-                return FormValidation.ok();
-            }
-        }
-    }
+  }
 }

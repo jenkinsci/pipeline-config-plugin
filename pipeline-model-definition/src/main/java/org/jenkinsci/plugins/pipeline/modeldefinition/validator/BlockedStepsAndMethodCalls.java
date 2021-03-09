@@ -25,60 +25,64 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
 import com.google.common.collect.ImmutableMap;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.Map;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTMethodCall;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTStep;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.Map;
-
 @Extension
 public class BlockedStepsAndMethodCalls extends DeclarativeValidatorContributor {
-    /**
-     * Get the map of step names to rejection messages. Exposed statically for testing purposes.
-     */
-    public static Map<String, String> blockedInSteps() {
-        return ImmutableMap.of("stage", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Stage(),
-                "properties", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Properties(),
-                "parallel", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Parallel());
+  /** Get the map of step names to rejection messages. Exposed statically for testing purposes. */
+  public static Map<String, String> blockedInSteps() {
+    return ImmutableMap.of(
+        "stage",
+        Messages.BlockedStepsAndMethodCalls_BlockedSteps_Stage(),
+        "properties",
+        Messages.BlockedStepsAndMethodCalls_BlockedSteps_Properties(),
+        "parallel",
+        Messages.BlockedStepsAndMethodCalls_BlockedSteps_Parallel());
+  }
+
+  /**
+   * Get the map of method or step names to rejection messages. Exposed statically for testing
+   * purposes and for use in more granular validation of job properties vs declarative options vs
+   * wrapper steps.
+   */
+  public static Map<String, String> blockedInMethodCalls() {
+    return new ImmutableMap.Builder<String, String>()
+        .put("node", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Node())
+        .putAll(blockedInSteps())
+        .build();
+  }
+
+  @Override
+  @CheckForNull
+  public String validateElement(
+      @NonNull ModelASTMethodCall method, @CheckForNull FlowExecution execution) {
+    if (method.getName() != null) {
+      if (blockedInMethodCalls().keySet().contains(method.getName())) {
+        return org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+            .ModelValidatorImpl_BlockedStep(
+                method.getName(), blockedInMethodCalls().get(method.getName()));
+      }
     }
 
-    /**
-     * Get the map of method or step names to rejection messages. Exposed statically for testing purposes and for use
-     * in more granular validation of job properties vs declarative options vs wrapper steps.
-     */
-    public static Map<String, String> blockedInMethodCalls() {
-        return new ImmutableMap.Builder<String,String>().put("node", Messages.BlockedStepsAndMethodCalls_BlockedSteps_Node())
-                .putAll(blockedInSteps())
-                .build();
+    return null;
+  }
+
+  @Override
+  @CheckForNull
+  public String validateElement(@NonNull ModelASTStep step, @CheckForNull FlowExecution execution) {
+    if (step.getName() != null) {
+      if (blockedInSteps().keySet().contains(step.getName())) {
+        return org.jenkinsci.plugins.pipeline.modeldefinition.Messages
+            .ModelValidatorImpl_BlockedStep(step.getName(), blockedInSteps().get(step.getName()));
+      }
     }
 
-    @Override
-    @CheckForNull
-    public String validateElement(@NonNull ModelASTMethodCall method, @CheckForNull FlowExecution execution) {
-        if (method.getName() != null) {
-            if (blockedInMethodCalls().keySet().contains(method.getName())) {
-                return org.jenkinsci.plugins.pipeline.modeldefinition.Messages.ModelValidatorImpl_BlockedStep(method.getName(),
-                        blockedInMethodCalls().get(method.getName()));
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-    @CheckForNull
-    public String validateElement(@NonNull ModelASTStep step, @CheckForNull FlowExecution execution) {
-        if (step.getName() != null) {
-            if (blockedInSteps().keySet().contains(step.getName())) {
-                return org.jenkinsci.plugins.pipeline.modeldefinition.Messages.ModelValidatorImpl_BlockedStep(step.getName(),
-                        blockedInSteps().get(step.getName()));
-            }
-        }
-
-        return null;
-    }
-
+    return null;
+  }
 }

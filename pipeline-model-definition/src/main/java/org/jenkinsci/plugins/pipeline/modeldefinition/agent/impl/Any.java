@@ -24,27 +24,25 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-
 public class Any extends DeclarativeAgent<Any> {
 
-    @DataBoundConstructor
-    public Any() {
-    }
+  @DataBoundConstructor
+  public Any() {}
 
-    @Extension(ordinal = -900) @Symbol("any")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor<Any> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Run on any agent";
-        }
+  @Extension(ordinal = -900)
+  @Symbol("any")
+  public static class DescriptorImpl extends DeclarativeAgentDescriptor<Any> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Run on any agent";
     }
+  }
 }

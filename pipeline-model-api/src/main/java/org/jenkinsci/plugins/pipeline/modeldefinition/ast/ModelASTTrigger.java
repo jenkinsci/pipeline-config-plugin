@@ -1,8 +1,7 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
  * A single trigger, corresponding eventually to a {@code Trigger}
@@ -10,21 +9,18 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @author Andrew Bayer
  */
 public class ModelASTTrigger extends ModelASTMethodCall {
-    public ModelASTTrigger(Object sourceLocation) {
-        super(sourceLocation);
-    }
+  public ModelASTTrigger(Object sourceLocation) {
+    super(sourceLocation);
+  }
 
-    @Override
-    public void validate(@NonNull final ModelValidator validator) {
-        validator.validateElement(this);
-        super.validate(validator);
-    }
+  @Override
+  public void validate(@NonNull final ModelValidator validator) {
+    validator.validateElement(this);
+    super.validate(validator);
+  }
 
-    @Override
-    public String toString() {
-        return "ModelASTTrigger{" +
-                "name='" + getName() + '\'' +
-                ", args=" + getArgs() +
-                "}";
-    }
+  @Override
+  public String toString() {
+    return "ModelASTTrigger{" + "name='" + getName() + '\'' + ", args=" + getArgs() + "}";
+  }
 }

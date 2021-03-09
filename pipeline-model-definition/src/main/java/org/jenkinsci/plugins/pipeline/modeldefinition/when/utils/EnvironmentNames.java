@@ -29,28 +29,29 @@ import hudson.EnvVars;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Easier way to refer to and extract known environment variables instead of copying strings back and forth.
+ * Easier way to refer to and extract known environment variables instead of copying strings back
+ * and forth.
  */
 public enum EnvironmentNames {
-    CHANGE_ID,
-    CHANGE_TARGET,
-    CHANGE_BRANCH,
-    CHANGE_FORK,
-    CHANGE_URL,
-    CHANGE_TITLE,
-    CHANGE_AUTHOR,
-    CHANGE_AUTHOR_DISPLAY_NAME,
-    CHANGE_AUTHOR_EMAIL;
+  CHANGE_ID,
+  CHANGE_TARGET,
+  CHANGE_BRANCH,
+  CHANGE_FORK,
+  CHANGE_URL,
+  CHANGE_TITLE,
+  CHANGE_AUTHOR,
+  CHANGE_AUTHOR_DISPLAY_NAME,
+  CHANGE_AUTHOR_EMAIL;
 
-    public boolean exists(EnvVars vars) {
-        return get(vars) != null;
-    }
+  public boolean exists(EnvVars vars) {
+    return get(vars) != null;
+  }
 
-    public boolean isEmpty(EnvVars vars) {
-        return StringUtils.isEmpty(get(vars));
-    }
+  public boolean isEmpty(EnvVars vars) {
+    return StringUtils.isEmpty(get(vars));
+  }
 
-    public String get(EnvVars vars) {
-        return vars.get(this.name());
-    }
+  public String get(EnvVars vars) {
+    return vars.get(this.name());
+  }
 }

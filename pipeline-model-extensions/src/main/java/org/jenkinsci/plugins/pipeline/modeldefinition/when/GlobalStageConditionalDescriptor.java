@@ -24,8 +24,14 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import java.util.Map;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapExpression;
@@ -34,44 +40,37 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.CommonUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.InvisibleGlobalWhenCondition;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
 
-import java.util.Map;
+/** Base descriptor for {@link GlobalStageConditional} */
+public abstract class GlobalStageConditionalDescriptor<S extends GlobalStageConditional<S>>
+    extends DeclarativeStageConditionalDescriptor<S> {
 
-import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+  /**
+   * Generates a map of strings to objects which {@link #transformToRuntimeAST(ModelASTWhenContent)}
+   * will use for instantiating the {@link GlobalStageConditional} for this descriptor.
+   *
+   * @param when The when condition to be inspected
+   * @return A map of arguments to use for instantiation.
+   */
+  public abstract Map<String, Object> argMapForCondition(
+      @NonNull InvisibleGlobalWhenCondition when);
 
-/**
- * Base descriptor for {@link GlobalStageConditional}
- */
-public abstract class GlobalStageConditionalDescriptor<S extends GlobalStageConditional<S>> extends DeclarativeStageConditionalDescriptor<S> {
+  @Override
+  public final boolean isInvisible() {
+    return true;
+  }
 
-    /**
-     * Generates a map of strings to objects which {@link #transformToRuntimeAST(ModelASTWhenContent)} will use for instantiating
-     * the {@link GlobalStageConditional} for this descriptor.
-     *
-     * @param when The when condition to be inspected
-     * @return A map of arguments to use for instantiation.
-     */
-    public abstract Map<String,Object> argMapForCondition(@NonNull InvisibleGlobalWhenCondition when);
+  @Override
+  public final Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent when) {
+    if (when instanceof InvisibleGlobalWhenCondition) {
+      InvisibleGlobalWhenCondition invisibleWhen = (InvisibleGlobalWhenCondition) when;
 
-    @Override
-    public final boolean isInvisible() {
-        return true;
+      MapExpression m = new MapExpression();
+      argMapForCondition(invisibleWhen)
+          .forEach((k, v) -> m.addMapEntryExpression(constX(k), constX(v)));
+
+      return callX(
+          ClassHelper.make(CommonUtils.class), "instantiateDescribable", args(classX(clazz), m));
     }
-
-    @Override
-    public final Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent when) {
-        if (when instanceof InvisibleGlobalWhenCondition) {
-            InvisibleGlobalWhenCondition invisibleWhen = (InvisibleGlobalWhenCondition) when;
-
-            MapExpression m = new MapExpression();
-            argMapForCondition(invisibleWhen).forEach((k, v) -> m.addMapEntryExpression(constX(k), constX(v)));
-
-            return callX(ClassHelper.make(CommonUtils.class),
-                "instantiateDescribable",
-                args(classX(clazz), m));
-        }
-        return GeneralUtils.constX(null);
-    }
+    return GeneralUtils.constX(null);
+  }
 }

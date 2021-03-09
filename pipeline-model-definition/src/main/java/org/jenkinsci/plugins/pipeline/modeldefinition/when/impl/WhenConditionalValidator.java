@@ -25,53 +25,54 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.DeclarativeValidatorContributor;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 @Extension
 public class WhenConditionalValidator extends DeclarativeValidatorContributor {
 
-    @CheckForNull
-    @Override
-    public String validateElement(@NonNull ModelASTWhenCondition condition, @CheckForNull FlowExecution execution) {
-        if (condition.getName().equals("changelog")) {
-            String pattern = getPatternArgument(condition.getArgs());
-            if (pattern == null) {
-                return Messages.WhenConditionalValidator_changelog_missingParameter();
-            } else {
-                try {
-                    Pattern.compile(pattern);
-                    Pattern.compile(ChangeLogConditional.expandForMultiLine(pattern), Pattern.MULTILINE | Pattern.DOTALL);
-                } catch (PatternSyntaxException e) {
-                    return Messages.WhenConditionalValidator_changelog_badPattern(pattern, e.getMessage());
-                }
-            }
+  @CheckForNull
+  @Override
+  public String validateElement(
+      @NonNull ModelASTWhenCondition condition, @CheckForNull FlowExecution execution) {
+    if (condition.getName().equals("changelog")) {
+      String pattern = getPatternArgument(condition.getArgs());
+      if (pattern == null) {
+        return Messages.WhenConditionalValidator_changelog_missingParameter();
+      } else {
+        try {
+          Pattern.compile(pattern);
+          Pattern.compile(
+              ChangeLogConditional.expandForMultiLine(pattern), Pattern.MULTILINE | Pattern.DOTALL);
+        } catch (PatternSyntaxException e) {
+          return Messages.WhenConditionalValidator_changelog_badPattern(pattern, e.getMessage());
         }
-
-        return null;
+      }
     }
 
-    private String getPatternArgument(ModelASTArgumentList args) {
-        if (args instanceof ModelASTSingleArgument) {
-            return (String) ((ModelASTSingleArgument) args).getValue().getValue();
-        } else if (args instanceof ModelASTPositionalArgumentList) {
-            final List<ModelASTValue> arguments = ((ModelASTPositionalArgumentList) args).getArguments();
-            if (!arguments.isEmpty()) {
-                return (String) arguments.get(0).getValue();
-            }
-        } else if (args instanceof ModelASTNamedArgumentList) {
-            return (String) ((ModelASTNamedArgumentList) args).argListToMap().get("pattern");
-        }
+    return null;
+  }
 
-        return null;
+  private String getPatternArgument(ModelASTArgumentList args) {
+    if (args instanceof ModelASTSingleArgument) {
+      return (String) ((ModelASTSingleArgument) args).getValue().getValue();
+    } else if (args instanceof ModelASTPositionalArgumentList) {
+      final List<ModelASTValue> arguments = ((ModelASTPositionalArgumentList) args).getArguments();
+      if (!arguments.isEmpty()) {
+        return (String) arguments.get(0).getValue();
+      }
+    } else if (args instanceof ModelASTNamedArgumentList) {
+      return (String) ((ModelASTNamedArgumentList) args).argListToMap().get("pattern");
     }
+
+    return null;
+  }
 }

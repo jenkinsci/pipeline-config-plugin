@@ -25,7 +25,10 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
 import com.google.common.collect.ImmutableList;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import java.util.List;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenContent;
@@ -34,48 +37,42 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageConditionalDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.List;
-
-/**
- * Inverted match of a stage condition
- */
+/** Inverted match of a stage condition */
 public class NotConditional extends DeclarativeStageConditional<NotConditional> {
-    private DeclarativeStageConditional<? extends DeclarativeStageConditional> child;
+  private DeclarativeStageConditional<? extends DeclarativeStageConditional> child;
 
-    @DataBoundConstructor
-    public NotConditional(DeclarativeStageConditional<? extends DeclarativeStageConditional> child) {
-        this.child = child;
-    }
+  @DataBoundConstructor
+  public NotConditional(DeclarativeStageConditional<? extends DeclarativeStageConditional> child) {
+    this.child = child;
+  }
 
-    public DeclarativeStageConditional<? extends DeclarativeStageConditional> getChild() {
-        return child;
+  public DeclarativeStageConditional<? extends DeclarativeStageConditional> getChild() {
+    return child;
+  }
+
+  @Override
+  @NonNull
+  public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
+    return ImmutableList.of(child);
+  }
+
+  @Extension
+  @Symbol("not")
+  public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<NotConditional> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Execute the stage if the nested condition is false";
     }
 
     @Override
-    @NonNull
-    public List<DeclarativeStageConditional<? extends DeclarativeStageConditional>> getChildren() {
-        return ImmutableList.of(child);
+    public int getAllowedChildrenCount() {
+      return 1;
     }
 
-    @Extension
-    @Symbol("not")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<NotConditional> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Execute the stage if the nested condition is false";
-        }
-
-        @Override
-        public int getAllowedChildrenCount() {
-            return 1;
-        }
-
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
-        }
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      return ASTParserUtils.transformWhenContentToRuntimeAST(original);
     }
+  }
 }

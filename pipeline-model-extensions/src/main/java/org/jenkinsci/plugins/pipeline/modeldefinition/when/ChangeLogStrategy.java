@@ -25,35 +25,33 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import jenkins.scm.api.SCMHead;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 /**
  * Extension point for what strategy to use when examining the changelog.
  *
- * In particular if a given {@link jenkins.scm.api.SCMHead}
- * is a change request that suggest all builds should be examined.
+ * <p>In particular if a given {@link jenkins.scm.api.SCMHead} is a change request that suggest all
+ * builds should be examined.
  */
 public class ChangeLogStrategy implements ExtensionPoint {
 
-    /**
-     *
-     * @param head the head in question
-     * @return {@code true} if all builds changelogs should be examined.
-     */
-    protected boolean shouldExamineAllBuilds(@NonNull SCMHead head) {
-        return false;
-    }
+  /**
+   * @param head the head in question
+   * @return {@code true} if all builds changelogs should be examined.
+   */
+  protected boolean shouldExamineAllBuilds(@NonNull SCMHead head) {
+    return false;
+  }
 
-    public static boolean isExamineAllBuilds(@NonNull SCMHead head) {
-        for (ChangeLogStrategy s : ExtensionList.lookup(ChangeLogStrategy.class)) {
-            if (s.shouldExamineAllBuilds(head)) {
-                return true;
-            }
-        }
-        return false;
+  public static boolean isExamineAllBuilds(@NonNull SCMHead head) {
+    for (ChangeLogStrategy s : ExtensionList.lookup(ChangeLogStrategy.class)) {
+      if (s.shouldExamineAllBuilds(head)) {
+        return true;
+      }
     }
+    return false;
+  }
 }

@@ -25,18 +25,17 @@
 package org.jenkinsci.plugins.pipeline;
 
 import hudson.ExtensionPoint;
-
 import java.util.Collections;
 import java.util.List;
 
 public abstract class StageTagsMetadata implements ExtensionPoint {
-    public abstract String getTagName();
+  public abstract String getTagName();
 
-    public List<String> getPossibleValues() {
-        return Collections.emptyList();
-    }
+  public List<String> getPossibleValues() {
+    return Collections.emptyList();
+  }
 
-    public boolean takesArbitraryValues() {
-        return false;
-    }
+  public boolean takesArbitraryValues() {
+    return false;
+  }
 }

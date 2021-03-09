@@ -24,29 +24,30 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTOption;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 /**
- * Validator contributor that rejects use of {@code parameters} or {@code triggers} in {@code options { ... }}
+ * Validator contributor that rejects use of {@code parameters} or {@code triggers} in {@code
+ * options { ... }}
  */
 @Extension
 public class ParametersAndTriggersInOptions extends DeclarativeValidatorContributor {
-    @Override
-    @CheckForNull
-    public String validateElement(@NonNull ModelASTOption option, @CheckForNull FlowExecution execution) {
-        if (option.getName() != null) {
-            if (option.getName().equals("parameters")) {
-                return Messages.ParametersAndTriggersInOptions_RejectParameters();
-            } else if (option.getName().equals("triggers")) {
-                return Messages.ParametersAndTriggersInOptions_RejectTriggers();
-            }
-        }
-
-        return null;
+  @Override
+  @CheckForNull
+  public String validateElement(
+      @NonNull ModelASTOption option, @CheckForNull FlowExecution execution) {
+    if (option.getName() != null) {
+      if (option.getName().equals("parameters")) {
+        return Messages.ParametersAndTriggersInOptions_RejectParameters();
+      } else if (option.getName().equals("triggers")) {
+        return Messages.ParametersAndTriggersInOptions_RejectTriggers();
+      }
     }
+
+    return null;
+  }
 }

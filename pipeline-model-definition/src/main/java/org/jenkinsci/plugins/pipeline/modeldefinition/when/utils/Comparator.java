@@ -25,121 +25,118 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.utils;
 
+import static org.apache.commons.lang.StringUtils.defaultIfBlank;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.util.ListBoxModel;
+import java.io.File;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.types.selectors.SelectorUtils;
 import org.jenkinsci.plugins.pipeline.modeldefinition.Messages;
 import org.jvnet.localizer.Localizable;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.io.File;
-
-import static org.apache.commons.lang.StringUtils.defaultIfBlank;
-
-/**
- * Utility for selecting a way to compare two strings.
- */
+/** Utility for selecting a way to compare two strings. */
 public enum Comparator {
-    /**
-     * ANT style "glob" pattern.
-     */
-    GLOB(Messages._Comparator_GLOB_DisplayName()) {
-        @Override
-        public boolean compare(@NonNull String pattern, String actual) {
-            return compare(pattern, actual, false);
-        }
-        @Override
-        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
-            actual = defaultIfBlank(actual, "");
-            // replace with the platform specific directory separator before
-            // invoking Ant's platform specific path matching.
-            String safeCompare = pattern.replace('/', File.separatorChar);
-            String safeName = actual.replace('/', File.separatorChar);
-            return SelectorUtils.matchPath(safeCompare, safeName, caseSensitive);
-        }
-    },
-    /**
-     * Regular expression
-     */
-    REGEXP(Messages._Comparator_REGEXP_DisplayName()) {
-        @Override
-        public boolean compare(@NonNull String pattern, String actual) {
-            actual = defaultIfBlank(actual, "");
-            //TODO validation for pattern compile
-            return actual.matches(pattern);
-        }
-        @Override
-        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
-            return compare(pattern, actual);
-        }
-    },
-    /**
-     * String equals
-     */
-    EQUALS(Messages._Comparator_EQUALS_DisplayName()) {
-        @Override
-        public boolean compare(@NonNull String pattern, String actual) {
-            actual = defaultIfBlank(actual, "");
-            return actual.equals(pattern);
-        }
-        @Override
-        public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
-            return compare(pattern, actual);
-        }
-    };
-
-    private final Localizable displayName;
-
-    private Comparator(Localizable displayName) {
-        this.displayName = displayName;
+  /** ANT style "glob" pattern. */
+  GLOB(Messages._Comparator_GLOB_DisplayName()) {
+    @Override
+    public boolean compare(@NonNull String pattern, String actual) {
+      return compare(pattern, actual, false);
     }
 
-    public Localizable getDisplayName() {
-        return displayName;
+    @Override
+    public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
+      actual = defaultIfBlank(actual, "");
+      // replace with the platform specific directory separator before
+      // invoking Ant's platform specific path matching.
+      String safeCompare = pattern.replace('/', File.separatorChar);
+      String safeName = actual.replace('/', File.separatorChar);
+      return SelectorUtils.matchPath(safeCompare, safeName, caseSensitive);
+    }
+  },
+  /** Regular expression */
+  REGEXP(Messages._Comparator_REGEXP_DisplayName()) {
+    @Override
+    public boolean compare(@NonNull String pattern, String actual) {
+      actual = defaultIfBlank(actual, "");
+      // TODO validation for pattern compile
+      return actual.matches(pattern);
     }
 
-    /**
-     * Compare the two strings
-     * @param pattern the pattern/value to check for
-     * @param actual the value to check
-     * @param caseSensitive whether the comparison will be case-sensitive. Only for the GLOB comparator
-     * @return true if matching
-     */
-    public abstract boolean compare(String pattern, String actual, boolean caseSensitive);
-
-    /**
-     * Compare the two strings
-     * @param pattern the pattern/value to check for
-     * @param actual the value to check
-     * @return true if matching
-     */
-    public abstract boolean compare(String pattern, String actual);
-
-    public static Comparator get(String name, Comparator defaultValue) {
-        if (StringUtils.isEmpty(name)) {
-            return defaultValue;
-        }
-        for (Comparator comparator : Comparator.values()) {
-            if (name.equalsIgnoreCase(comparator.name())) {
-                return comparator;
-            }
-        }
-        return defaultValue;
+    @Override
+    public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
+      return compare(pattern, actual);
+    }
+  },
+  /** String equals */
+  EQUALS(Messages._Comparator_EQUALS_DisplayName()) {
+    @Override
+    public boolean compare(@NonNull String pattern, String actual) {
+      actual = defaultIfBlank(actual, "");
+      return actual.equals(pattern);
     }
 
-    public static ListBoxModel getSelectOptions(boolean emptySelection, Comparator top) {
-        ListBoxModel model = new ListBoxModel();
-        if (emptySelection) {
-            model.add("");
-        }
-        if (top != null) {
-            model.add(top.getDisplayName().toString(), top.name());
-        }
-        for (Comparator comparator : Comparator.values()) {
-            if (comparator != top) {
-                model.add(comparator.getDisplayName().toString(), comparator.name());
-            }
-        }
-        return model;
+    @Override
+    public boolean compare(@NonNull String pattern, String actual, boolean caseSensitive) {
+      return compare(pattern, actual);
     }
+  };
+
+  private final Localizable displayName;
+
+  private Comparator(Localizable displayName) {
+    this.displayName = displayName;
+  }
+
+  public Localizable getDisplayName() {
+    return displayName;
+  }
+
+  /**
+   * Compare the two strings
+   *
+   * @param pattern the pattern/value to check for
+   * @param actual the value to check
+   * @param caseSensitive whether the comparison will be case-sensitive. Only for the GLOB
+   *     comparator
+   * @return true if matching
+   */
+  public abstract boolean compare(String pattern, String actual, boolean caseSensitive);
+
+  /**
+   * Compare the two strings
+   *
+   * @param pattern the pattern/value to check for
+   * @param actual the value to check
+   * @return true if matching
+   */
+  public abstract boolean compare(String pattern, String actual);
+
+  public static Comparator get(String name, Comparator defaultValue) {
+    if (StringUtils.isEmpty(name)) {
+      return defaultValue;
+    }
+    for (Comparator comparator : Comparator.values()) {
+      if (name.equalsIgnoreCase(comparator.name())) {
+        return comparator;
+      }
+    }
+    return defaultValue;
+  }
+
+  public static ListBoxModel getSelectOptions(boolean emptySelection, Comparator top) {
+    ListBoxModel model = new ListBoxModel();
+    if (emptySelection) {
+      model.add("");
+    }
+    if (top != null) {
+      model.add(top.getDisplayName().toString(), top.name());
+    }
+    for (Comparator comparator : Comparator.values()) {
+      if (comparator != top) {
+        model.add(comparator.getDisplayName().toString(), comparator.name());
+      }
+    }
+    return model;
+  }
 }

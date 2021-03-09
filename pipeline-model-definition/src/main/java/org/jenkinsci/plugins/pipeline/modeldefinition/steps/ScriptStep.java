@@ -24,61 +24,60 @@
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
 import hudson.Extension;
+import java.io.Serializable;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.BodyExecutionCallback;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import java.io.Serializable;
-
 /**
  * Step that marks the use of "scripting features" that goes beyond the configy subset.
  *
- * <p>
- * This marker assists the validation, but at runtime it doesn't do anything. It just executes the body normally.
+ * <p>This marker assists the validation, but at runtime it doesn't do anything. It just executes
+ * the body normally.
  *
  * @author Andrew Bayer
  */
 public final class ScriptStep extends AbstractStepImpl implements Serializable {
 
+  private static final long serialVersionUID = 1L;
+
+  @DataBoundConstructor
+  public ScriptStep() {}
+
+  @Extension
+  public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
+
+    public DescriptorImpl() {
+      super(ScriptStepExecution.class);
+    }
+
+    @Override
+    public String getFunctionName() {
+      return "script";
+    }
+
+    @Override
+    public String getDisplayName() {
+      return "Run arbitrary Pipeline script";
+    }
+
+    @Override
+    public boolean takesImplicitBlockArgument() {
+      return true;
+    }
+  }
+
+  public static final class ScriptStepExecution extends AbstractStepExecutionImpl {
+
+    @Override
+    public boolean start() throws Exception {
+
+      getContext().newBodyInvoker().withCallback(BodyExecutionCallback.wrap(getContext())).start();
+      return false;
+    }
+
     private static final long serialVersionUID = 1L;
-
-    @DataBoundConstructor
-    public ScriptStep() {
-    }
-
-    @Extension
-    public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
-
-        public DescriptorImpl() {
-            super(ScriptStepExecution.class);
-        }
-
-        @Override public String getFunctionName() {
-            return "script";
-        }
-
-        @Override public String getDisplayName() {
-            return "Run arbitrary Pipeline script";
-        }
-
-        @Override public boolean takesImplicitBlockArgument() {
-            return true;
-        }
-    }
-
-    public static final class ScriptStepExecution extends AbstractStepExecutionImpl {
-
-        @Override
-        public boolean start() throws Exception {
-
-            getContext().newBodyInvoker()
-                    .withCallback(BodyExecutionCallback.wrap(getContext()))
-                    .start();
-            return false;
-        }
-
-        private static final long serialVersionUID = 1L;
-    }
+  }
 }

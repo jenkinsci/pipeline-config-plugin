@@ -24,28 +24,25 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.agent.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgent;
 import org.jenkinsci.plugins.pipeline.modeldefinition.agent.DeclarativeAgentDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-
 public class None extends DeclarativeAgent<None> {
 
-    @DataBoundConstructor
-    public None() {
+  @DataBoundConstructor
+  public None() {}
 
+  @Extension(ordinal = -1000)
+  @Symbol("none")
+  public static class DescriptorImpl extends DeclarativeAgentDescriptor<None> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Don't run on an agent";
     }
-
-    @Extension(ordinal = -1000) @Symbol("none")
-    public static class DescriptorImpl extends DeclarativeAgentDescriptor<None> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Don't run on an agent";
-        }
-    }
+  }
 }

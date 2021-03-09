@@ -23,6 +23,10 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import static org.jenkinsci.plugins.pipeline.modeldefinition.BasicModelDefTest.syntheticStagePredicate;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Collection;
 import org.jenkinsci.plugins.pipeline.SyntheticStage;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
@@ -39,67 +43,69 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
-import java.util.Collection;
-
-import static org.jenkinsci.plugins.pipeline.modeldefinition.BasicModelDefTest.syntheticStagePredicate;
-import static org.junit.Assert.assertNotNull;
-
 public class SyntheticStageGraphListenerTest {
 
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
+  @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
 
-    @Rule
-    public RestartableJenkinsRule rr = new RestartableJenkinsRule();
+  @Rule public RestartableJenkinsRule rr = new RestartableJenkinsRule();
 
-    @Issue("JENKINS-41243")
-    @Test
-    public void resume() throws Exception {
-        rr.addStep(new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                WorkflowJob p = rr.j.createProject(WorkflowJob.class, "p");
-                p.setDefinition(new CpsFlowDefinition("pipeline {\n" +
-                        "  agent any\n" +
-                        "  stages {\n" +
-                        "    stage('x') {\n" +
-                        "      steps {\n" +
-                        "        script {\n" +
-                        "          semaphore 'wait'\n" +
-                        "        }\n" +
-                        "      }\n" +
-                        "    }\n" +
-                        "  }\n" +
-                        "  post {\n" +
-                        "    always {\n" +
-                        "      echo 'Hi there'\n" +
-                        "    }\n" +
-                        "  }\n" +
-                        "}", true));
-                WorkflowRun b = p.scheduleBuild2(0).waitForStart();
-                SemaphoreStep.waitForStart("wait/1", b);
-            }
+  @Issue("JENKINS-41243")
+  @Test
+  public void resume() throws Exception {
+    rr.addStep(
+        new Statement() {
+          @Override
+          public void evaluate() throws Throwable {
+            WorkflowJob p = rr.j.createProject(WorkflowJob.class, "p");
+            p.setDefinition(
+                new CpsFlowDefinition(
+                    "pipeline {\n"
+                        + "  agent any\n"
+                        + "  stages {\n"
+                        + "    stage('x') {\n"
+                        + "      steps {\n"
+                        + "        script {\n"
+                        + "          semaphore 'wait'\n"
+                        + "        }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "  post {\n"
+                        + "    always {\n"
+                        + "      echo 'Hi there'\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}",
+                    true));
+            WorkflowRun b = p.scheduleBuild2(0).waitForStart();
+            SemaphoreStep.waitForStart("wait/1", b);
+          }
         });
-        rr.addStep(new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                WorkflowJob p = rr.j.jenkins.getItemByFullName("p", WorkflowJob.class);
-                assertNotNull(p);
-                WorkflowRun b = p.getBuildByNumber(1);
-                SemaphoreStep.success("wait/1", null);
-                rr.j.assertBuildStatusSuccess(rr.j.waitForCompletion(b));
-                rr.j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
-                FlowExecution execution = b.getExecution();
-                assertNotNull(execution);
-                Collection<FlowNode> heads = execution.getCurrentHeads();
+    rr.addStep(
+        new Statement() {
+          @Override
+          public void evaluate() throws Throwable {
+            WorkflowJob p = rr.j.jenkins.getItemByFullName("p", WorkflowJob.class);
+            assertNotNull(p);
+            WorkflowRun b = p.getBuildByNumber(1);
+            SemaphoreStep.success("wait/1", null);
+            rr.j.assertBuildStatusSuccess(rr.j.waitForCompletion(b));
+            rr.j.assertLogContains("[Pipeline] { (" + SyntheticStageNames.postBuild() + ")", b);
+            FlowExecution execution = b.getExecution();
+            assertNotNull(execution);
+            Collection<FlowNode> heads = execution.getCurrentHeads();
 
-                DepthFirstScanner scanner = new DepthFirstScanner();
+            DepthFirstScanner scanner = new DepthFirstScanner();
 
-                assertNotNull(scanner.findFirstMatch(heads, null, syntheticStagePredicate(SyntheticStageNames.postBuild(), SyntheticStage.getPost())));
-                SemaphoreStep.success("wait/2", null);
-                rr.j.buildAndAssertSuccess(p);
-            }
+            assertNotNull(
+                scanner.findFirstMatch(
+                    heads,
+                    null,
+                    syntheticStagePredicate(
+                        SyntheticStageNames.postBuild(), SyntheticStage.getPost())));
+            SemaphoreStep.success("wait/2", null);
+            rr.j.buildAndAssertSuccess(p);
+          }
         });
-    }
-
+  }
 }

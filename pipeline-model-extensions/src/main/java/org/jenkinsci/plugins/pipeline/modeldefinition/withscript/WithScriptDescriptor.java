@@ -24,63 +24,68 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.withscript;
 
-import hudson.model.Descriptor;
-import org.jenkinsci.plugins.structs.SymbolLookup;
-import org.jenkinsci.plugins.structs.describable.DescribableModel;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.Descriptor;
 import java.util.Map;
 import java.util.Set;
+import org.jenkinsci.plugins.structs.SymbolLookup;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
 
 /**
  * Descriptor for {@link WithScriptDescribable}.
  *
  * @author Andrew Bayer
  */
-public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>> extends Descriptor<T> {
+public abstract class WithScriptDescriptor<T extends WithScriptDescribable<T>>
+    extends Descriptor<T> {
 
-    /**
-     * The name for this type. Defaults to the first string in the {@code Symbol} on the class.
-     *
-     * @return The name.
-     */
-    public @NonNull String getName() {
-        Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
-        if (symbolValues.isEmpty()) {
-            throw new IllegalArgumentException(clazz.getSimpleName() + " descriptor class " + this.getClass().getName()
-                    + " does not have a @Symbol and does not override getName().");
-        }
-        return symbolValues.iterator().next();
+  /**
+   * The name for this type. Defaults to the first string in the {@code Symbol} on the class.
+   *
+   * @return The name.
+   */
+  public @NonNull String getName() {
+    Set<String> symbolValues = SymbolLookup.getSymbolValue(this);
+    if (symbolValues.isEmpty()) {
+      throw new IllegalArgumentException(
+          clazz.getSimpleName()
+              + " descriptor class "
+              + this.getClass().getName()
+              + " does not have a @Symbol and does not override getName().");
     }
+    return symbolValues.iterator().next();
+  }
 
-    /**
-     * The full package and class name for the {@link WithScriptScript} class corresponding to this. Defaults to
-     * the {@link WithScriptDescribable} class name with "Script" appended to the end.
-     *
-     * @return The class name, defaulting to the {@link WithScriptDescribable} {@link #clazz} class name with "Script" appended.
-     */
-    public @NonNull String getScriptClass() {
-        return clazz.getName() + "Script";
-    }
+  /**
+   * The full package and class name for the {@link WithScriptScript} class corresponding to this.
+   * Defaults to the {@link WithScriptDescribable} class name with "Script" appended to the end.
+   *
+   * @return The class name, defaulting to the {@link WithScriptDescribable} {@link #clazz} class
+   *     name with "Script" appended.
+   */
+  public @NonNull String getScriptClass() {
+    return clazz.getName() + "Script";
+  }
 
-    /**
-     * Creates an instance of the corresponding {@link WithScriptDescribable} from the given arguments.
-     *
-     * @param arguments A map of strings/objects to be passed to the constructor.
-     * @return An instantiated {@link WithScriptDescribable}
-     * @throws Exception if there are issues instantiating
-     */
-    public T newInstance(Map<String,Object> arguments) throws Exception {
-        return new DescribableModel<>(clazz).instantiate(arguments);
-    }
+  /**
+   * Creates an instance of the corresponding {@link WithScriptDescribable} from the given
+   * arguments.
+   *
+   * @param arguments A map of strings/objects to be passed to the constructor.
+   * @return An instantiated {@link WithScriptDescribable}
+   * @throws Exception if there are issues instantiating
+   */
+  public T newInstance(Map<String, Object> arguments) throws Exception {
+    return new DescribableModel<>(clazz).instantiate(arguments);
+  }
 
-    /**
-     * Creates an instance of the corresponding {@link WithScriptDescribable} with no arguments.
-     *
-     * @return An instantiated {@link WithScriptDescribable}
-     * @throws Exception if there are issues instantiating
-     */
-    public T newInstance() throws Exception {
-        return clazz.newInstance();
-    }
+  /**
+   * Creates an instance of the corresponding {@link WithScriptDescribable} with no arguments.
+   *
+   * @return An instantiated {@link WithScriptDescribable}
+   * @throws Exception if there are issues instantiating
+   */
+  public T newInstance() throws Exception {
+    return clazz.newInstance();
+  }
 }

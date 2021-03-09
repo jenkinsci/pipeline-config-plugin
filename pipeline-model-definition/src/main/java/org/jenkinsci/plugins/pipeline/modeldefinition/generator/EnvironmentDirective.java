@@ -24,90 +24,89 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public class EnvironmentDirective extends AbstractDirective<EnvironmentDirective> {
-    private final List<NameAndValue> env = new ArrayList<>();
+  private final List<NameAndValue> env = new ArrayList<>();
+
+  @DataBoundConstructor
+  public EnvironmentDirective(List<NameAndValue> env) {
+    if (env != null) {
+      this.env.addAll(env);
+    }
+  }
+
+  public List<NameAndValue> getEnv() {
+    return env;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<EnvironmentDirective> {
+    @Override
+    @NonNull
+    public String getName() {
+      return "environment";
+    }
+
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Environment";
+    }
+
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull EnvironmentDirective directive) {
+      StringBuilder result = new StringBuilder("environment {\n");
+      if (!directive.getEnv().isEmpty()) {
+        for (NameAndValue e : directive.getEnv()) {
+          result.append(e.name).append(" = ");
+          result.append("\"").append(e.getValue()).append("\"\n");
+        }
+      } else {
+        result.append("// No environment variables specified\n");
+      }
+      result.append("}\n");
+
+      return result.toString();
+    }
+
+    public String getEnvHelp(String field) {
+      return "/descriptor/" + getId() + "/help/" + field;
+    }
+  }
+
+  @Restricted(NoExternalUse.class)
+  public static final class NameAndValue {
+    private String name;
+    private String value;
 
     @DataBoundConstructor
-    public EnvironmentDirective(List<NameAndValue> env) {
-        if (env != null) {
-            this.env.addAll(env);
-        }
+    public NameAndValue(String name, String value) {
+      this.name = name;
+      this.value = value;
     }
 
-    public List<NameAndValue> getEnv() {
-        return env;
+    public String getName() {
+      return name;
     }
 
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<EnvironmentDirective> {
-        @Override
-        @NonNull
-        public String getName() {
-            return "environment";
-        }
-
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Environment";
-        }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull EnvironmentDirective directive) {
-            StringBuilder result = new StringBuilder("environment {\n");
-            if (!directive.getEnv().isEmpty()) {
-                for (NameAndValue e : directive.getEnv()) {
-                    result.append(e.name).append(" = ");
-                    result.append("\"").append(e.getValue()).append("\"\n");
-                }
-            } else {
-                result.append("// No environment variables specified\n");
-            }
-            result.append("}\n");
-
-            return result.toString();
-        }
-
-        public String getEnvHelp(String field) {
-            return "/descriptor/" + getId() + "/help/" + field;
-        }
+    public String getValue() {
+      return value;
     }
-
-    @Restricted(NoExternalUse.class)
-    public static final class NameAndValue {
-        private String name;
-        private String value;
-
-        @DataBoundConstructor
-        public NameAndValue(String name, String value) {
-            this.name = name;
-            this.value = value;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
+  }
 }

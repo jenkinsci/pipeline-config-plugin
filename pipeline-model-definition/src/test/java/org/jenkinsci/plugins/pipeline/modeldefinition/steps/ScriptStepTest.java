@@ -23,6 +23,8 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition.steps;
 
+import static org.junit.Assert.assertNotNull;
+
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -35,40 +37,40 @@ import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 
-import static org.junit.Assert.assertNotNull;
-
 public class ScriptStepTest {
 
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
+  @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
 
-    @Rule
-    public RestartableJenkinsRule rr = new RestartableJenkinsRule();
+  @Rule public RestartableJenkinsRule rr = new RestartableJenkinsRule();
 
-    @Issue("JENKINS-39134")
-    @Test
-    public void resume() throws Exception {
-        rr.addStep(new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                WorkflowJob p = rr.j.createProject(WorkflowJob.class, "p");
-                p.setDefinition(new CpsFlowDefinition("pipeline {agent any; stages {stage('x') {steps {script {semaphore 'wait'}}}}}", true));
-                WorkflowRun b = p.scheduleBuild2(0).waitForStart();
-                SemaphoreStep.waitForStart("wait/1", b);
-            }
+  @Issue("JENKINS-39134")
+  @Test
+  public void resume() throws Exception {
+    rr.addStep(
+        new Statement() {
+          @Override
+          public void evaluate() throws Throwable {
+            WorkflowJob p = rr.j.createProject(WorkflowJob.class, "p");
+            p.setDefinition(
+                new CpsFlowDefinition(
+                    "pipeline {agent any; stages {stage('x') {steps {script {semaphore 'wait'}}}}}",
+                    true));
+            WorkflowRun b = p.scheduleBuild2(0).waitForStart();
+            SemaphoreStep.waitForStart("wait/1", b);
+          }
         });
-        rr.addStep(new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                WorkflowJob p = rr.j.jenkins.getItemByFullName("p", WorkflowJob.class);
-                assertNotNull(p);
-                WorkflowRun b = p.getBuildByNumber(1);
-                SemaphoreStep.success("wait/1", null);
-                rr.j.assertBuildStatusSuccess(rr.j.waitForCompletion(b));
-                SemaphoreStep.success("wait/2", null);
-                rr.j.buildAndAssertSuccess(p);
-            }
+    rr.addStep(
+        new Statement() {
+          @Override
+          public void evaluate() throws Throwable {
+            WorkflowJob p = rr.j.jenkins.getItemByFullName("p", WorkflowJob.class);
+            assertNotNull(p);
+            WorkflowRun b = p.getBuildByNumber(1);
+            SemaphoreStep.success("wait/1", null);
+            rr.j.assertBuildStatusSuccess(rr.j.waitForCompletion(b));
+            SemaphoreStep.success("wait/2", null);
+            rr.j.buildAndAssertSuccess(p);
+          }
         });
-    }
-
+  }
 }

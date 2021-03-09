@@ -25,6 +25,8 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
@@ -35,46 +37,45 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 /**
-  This conditional prevents the current job of continuing if is not triggered by the cause provided
+ * This conditional prevents the current job of continuing if is not triggered by the cause provided
  */
 public class TriggeredByConditional extends DeclarativeStageConditional<TriggeredByConditional> {
 
-    private String cause;
-    private String detail;
+  private String cause;
+  private String detail;
 
-    @DataBoundConstructor
-    public TriggeredByConditional(String cause) {
-        this.cause = cause;
-    }
-    public String getCause() {
-        return cause;
+  @DataBoundConstructor
+  public TriggeredByConditional(String cause) {
+    this.cause = cause;
+  }
+
+  public String getCause() {
+    return cause;
+  }
+
+  public String getDetail() {
+    return detail;
+  }
+
+  @DataBoundSetter
+  public void setDetail(String detail) {
+    this.detail = detail;
+  }
+
+  @Extension
+  @Symbol("triggeredBy")
+  public static class DescriptorImpl
+      extends DeclarativeStageConditionalDescriptor<TriggeredByConditional> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Execute the stage if the job has been triggered by 'cause'";
     }
 
-    public String getDetail() {
-        return detail;
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      return ASTParserUtils.transformWhenContentToRuntimeAST(original);
     }
-
-    @DataBoundSetter
-    public void setDetail(String detail) {
-        this.detail = detail;
-    }
-
-    @Extension
-    @Symbol("triggeredBy")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<TriggeredByConditional> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Execute the stage if the job has been triggered by 'cause'";
-        }
-
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
-        }
-    }
+  }
 }

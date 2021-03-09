@@ -28,27 +28,27 @@ import java.util.Arrays;
 import java.util.List;
 
 public class SyntheticStageNames {
-    public static List<String> preStages() {
-        return Arrays.asList(checkout(), agentSetup(), toolInstall());
-    }
+  public static List<String> preStages() {
+    return Arrays.asList(checkout(), agentSetup(), toolInstall());
+  }
 
-    public static List<String> postStages() {
-        return Arrays.asList(postBuild());
-    }
+  public static List<String> postStages() {
+    return Arrays.asList(postBuild());
+  }
 
-    public static String checkout() {
-        return "Declarative: Checkout SCM";
-    }
+  public static String checkout() {
+    return "Declarative: Checkout SCM";
+  }
 
-    public static String agentSetup() {
-        return "Declarative: Agent Setup";
-    }
+  public static String agentSetup() {
+    return "Declarative: Agent Setup";
+  }
 
-    public static String toolInstall() {
-        return "Declarative: Tool Install";
-    }
+  public static String toolInstall() {
+    return "Declarative: Tool Install";
+  }
 
-    public static String postBuild() {
-        return "Declarative: Post Actions";
-    }
+  public static String postBuild() {
+    return "Declarative: Post Actions";
+  }
 }

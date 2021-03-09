@@ -24,56 +24,54 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.ExtensionList;
 import hudson.model.Descriptor;
+import java.util.List;
+import java.util.Set;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.jenkinsci.plugins.structs.SymbolLookup;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 public abstract class DirectiveDescriptor<T extends AbstractDirective<T>> extends Descriptor<T> {
-    @NonNull
-    public boolean isTopLevel(){
-        return true;
+  @NonNull
+  public boolean isTopLevel() {
+    return true;
+  }
+
+  @NonNull
+  public abstract String getName();
+
+  @NonNull
+  public abstract String getDisplayName();
+
+  @NonNull
+  public abstract List<Descriptor> getDescriptors();
+
+  @NonNull
+  public static ExtensionList<DirectiveDescriptor> all() {
+    return ExtensionList.lookup(DirectiveDescriptor.class);
+  }
+
+  @NonNull
+  public abstract String toGroovy(@NonNull T directive);
+
+  @NonNull
+  public final String toIndentedGroovy(@NonNull T directive) {
+    return ModelASTPipelineDef.toIndentedGroovy(toGroovy(directive));
+  }
+
+  public static String symbolForDescriptor(@NonNull Descriptor d) {
+    if (d instanceof StepDescriptor) {
+      return ((StepDescriptor) d).getFunctionName();
+    } else {
+      Set<String> symbols = SymbolLookup.getSymbolValue(d);
+
+      if (symbols.isEmpty()) {
+        return null;
+      } else {
+        return symbols.iterator().next();
+      }
     }
-
-    @NonNull
-    public abstract String getName();
-
-    @NonNull
-    public abstract String getDisplayName();
-
-    @NonNull
-    public abstract List<Descriptor> getDescriptors();
-
-    @NonNull
-    public static ExtensionList<DirectiveDescriptor> all() {
-        return ExtensionList.lookup(DirectiveDescriptor.class);
-    }
-
-    @NonNull
-    public abstract String toGroovy(@NonNull T directive);
-
-    @NonNull
-    public final String toIndentedGroovy(@NonNull T directive) {
-        return ModelASTPipelineDef.toIndentedGroovy(toGroovy(directive));
-    }
-
-    public static String symbolForDescriptor(@NonNull Descriptor d) {
-        if (d instanceof StepDescriptor) {
-            return ((StepDescriptor) d).getFunctionName();
-        } else {
-            Set<String> symbols = SymbolLookup.getSymbolValue(d);
-
-            if (symbols.isEmpty()) {
-                return null;
-            } else {
-                return symbols.iterator().next();
-            }
-        }
-    }
+  }
 }

@@ -29,73 +29,77 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
- * {@code when} container generated when adding invisible global {@code when} conditions to a stage, containing the new
- * invisible conditions and any explicitly defined ones. When created with existing conditions, the existing {@code when}
- * container is stored for use as well. This is used as a marker to avoid validation, JSON/Groovy generation, etc for
- * the generated container.
+ * {@code when} container generated when adding invisible global {@code when} conditions to a stage,
+ * containing the new invisible conditions and any explicitly defined ones. When created with
+ * existing conditions, the existing {@code when} container is stored for use as well. This is used
+ * as a marker to avoid validation, JSON/Groovy generation, etc for the generated container.
  */
 public class InvisibleWhen extends ModelASTWhen {
-    /**
-     * The optional original when container on the stage, used for delegation.
-     */
-    private ModelASTWhen originalWhen;
+  /** The optional original when container on the stage, used for delegation. */
+  private ModelASTWhen originalWhen;
 
-    public InvisibleWhen() {
-        super(null);
-    }
+  public InvisibleWhen() {
+    super(null);
+  }
 
-    public void setOriginalWhen(ModelASTWhen originalWhen) {
-        this.originalWhen = originalWhen;
-    }
+  public void setOriginalWhen(ModelASTWhen originalWhen) {
+    this.originalWhen = originalWhen;
+  }
 
-    @Override
-    public Object getSourceLocation() {
-        return originalWhen != null ? originalWhen.getSourceLocation() : null;
-    }
+  @Override
+  public Object getSourceLocation() {
+    return originalWhen != null ? originalWhen.getSourceLocation() : null;
+  }
 
-    @Override
-    public Boolean getBeforeAgent() {
-        return originalWhen != null && originalWhen.getBeforeAgent() != null ? originalWhen.getBeforeAgent() : false;
-    }
+  @Override
+  public Boolean getBeforeAgent() {
+    return originalWhen != null && originalWhen.getBeforeAgent() != null
+        ? originalWhen.getBeforeAgent()
+        : false;
+  }
 
-    @Override
-    public Boolean getBeforeInput() {
-        return originalWhen != null && originalWhen.getBeforeInput() != null ? originalWhen.getBeforeInput() : false;
-    }
+  @Override
+  public Boolean getBeforeInput() {
+    return originalWhen != null && originalWhen.getBeforeInput() != null
+        ? originalWhen.getBeforeInput()
+        : false;
+  }
 
-    @Override
-    public Boolean getBeforeOptions() {
-        return originalWhen != null && originalWhen.getBeforeOptions() != null ? originalWhen.getBeforeOptions() : false;
-    }
+  @Override
+  public Boolean getBeforeOptions() {
+    return originalWhen != null && originalWhen.getBeforeOptions() != null
+        ? originalWhen.getBeforeOptions()
+        : false;
+  }
 
-    @NonNull
-    @Override
-    public Object toJSON() {
-        return originalWhen != null ? originalWhen.toJSON() : new JSONObject();
-    }
+  @NonNull
+  @Override
+  public Object toJSON() {
+    return originalWhen != null ? originalWhen.toJSON() : new JSONObject();
+  }
 
-    @NonNull
-    @Override
-    public String toGroovy() {
-        return originalWhen != null ? originalWhen.toGroovy() : "";
-    }
+  @NonNull
+  @Override
+  public String toGroovy() {
+    return originalWhen != null ? originalWhen.toGroovy() : "";
+  }
 
-    @Override
-    public void removeSourceLocation() {
-        if (originalWhen != null) {
-            originalWhen.removeSourceLocation();
-        }
+  @Override
+  public void removeSourceLocation() {
+    if (originalWhen != null) {
+      originalWhen.removeSourceLocation();
     }
+  }
 
-    @Override
-    public String toString() {
-        return originalWhen != null ? originalWhen.toString() : super.toString();
-    }
+  @Override
+  public String toString() {
+    return originalWhen != null ? originalWhen.toString() : super.toString();
+  }
 
-    @Override
-    public void validate(@NonNull ModelValidator validator) {
-        if (originalWhen != null) {
-            originalWhen.validate(validator);
-        }
+  @Override
+  public void validate(@NonNull ModelValidator validator) {
+    if (originalWhen != null) {
+      originalWhen.validate(validator);
     }
+  }
 }

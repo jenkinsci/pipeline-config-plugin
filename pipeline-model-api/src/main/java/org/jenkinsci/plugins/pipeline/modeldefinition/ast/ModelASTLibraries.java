@@ -24,12 +24,11 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
+import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
 
 /**
  * A container for one or more library strings
@@ -37,82 +36,79 @@ import java.util.List;
  * @author Andrew Bayer
  */
 public final class ModelASTLibraries extends ModelASTElement implements ModelASTElementContainer {
-    private List<ModelASTValue> libs = new ArrayList<>();
+  private List<ModelASTValue> libs = new ArrayList<>();
 
-    public ModelASTLibraries(Object sourceLocation) {
-        super(sourceLocation);
+  public ModelASTLibraries(Object sourceLocation) {
+    super(sourceLocation);
+  }
+
+  @Override
+  @NonNull
+  public JSONObject toJSON() {
+    return toJSONObject("libraries", libs);
+  }
+
+  @Override
+  public void validate(@NonNull final ModelValidator validator) {
+    validator.validateElement(this);
+    validate(validator, libs);
+  }
+
+  @Override
+  @NonNull
+  public String toGroovy() {
+    StringBuilder result = new StringBuilder("libraries {\n");
+    for (ModelASTValue v : libs) {
+      result.append("lib(").append(v.toGroovy()).append(")\n");
+    }
+    result.append("}\n");
+    return result.toString();
+  }
+
+  @Override
+  public void removeSourceLocation() {
+    super.removeSourceLocation();
+    removeSourceLocationsFrom(libs);
+  }
+
+  public boolean isEmpty() {
+    return libs.isEmpty();
+  }
+
+  public List<ModelASTValue> getLibs() {
+    return libs;
+  }
+
+  public void setLibs(List<ModelASTValue> libs) {
+    this.libs = libs;
+  }
+
+  @Override
+  public String toString() {
+    return "ModelASTLibraries{" + "libs=" + libs + "}";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
     }
 
-    @Override
-    @NonNull
-    public JSONObject toJSON() {
-        return toJSONObject("libraries", libs);
-    }
+    ModelASTLibraries that = (ModelASTLibraries) o;
 
-    @Override
-    public void validate(@NonNull final ModelValidator validator) {
-        validator.validateElement(this);
-        validate(validator, libs);
-    }
+    return getLibs() != null ? getLibs().equals(that.getLibs()) : that.getLibs() == null;
+  }
 
-    @Override
-    @NonNull
-    public String toGroovy() {
-        StringBuilder result = new StringBuilder("libraries {\n");
-        for (ModelASTValue v : libs) {
-            result.append("lib(").append(v.toGroovy()).append(")\n");
-        }
-        result.append("}\n");
-        return result.toString();
-    }
-
-    @Override
-    public void removeSourceLocation() {
-        super.removeSourceLocation();
-        removeSourceLocationsFrom(libs);
-    }
-
-    public boolean isEmpty() {
-        return libs.isEmpty();
-    }
-
-    public List<ModelASTValue> getLibs() {
-        return libs;
-    }
-
-    public void setLibs(List<ModelASTValue> libs) {
-        this.libs = libs;
-    }
-
-    @Override
-    public String toString() {
-        return "ModelASTLibraries{" +
-                "libs=" + libs +
-                "}";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-
-        ModelASTLibraries that = (ModelASTLibraries) o;
-
-        return getLibs() != null ? getLibs().equals(that.getLibs()) : that.getLibs() == null;
-
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (getLibs() != null ? getLibs().hashCode() : 0);
-        return result;
-    }
+  @Override
+  public int hashCode() {
+    int result = super.hashCode();
+    result = 31 * result + (getLibs() != null ? getLibs().hashCode() : 0);
+    return result;
+  }
 }

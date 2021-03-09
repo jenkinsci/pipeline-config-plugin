@@ -9,30 +9,29 @@ import java.util.Map;
  * @author Andrew Bayer
  */
 public abstract class ModelASTArgumentList extends ModelASTElement {
-    public ModelASTArgumentList(Object sourceLocation) {
-        super(sourceLocation);
+  public ModelASTArgumentList(Object sourceLocation) {
+    super(sourceLocation);
+  }
+
+  @Override
+  public String toString() {
+    return "ModelASTArgumentList{}";
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
     }
 
-    @Override
-    public String toString() {
-        return "ModelASTArgumentList{}";
-    }
+    return true;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-
-        return true;
-
-    }
-
-    public abstract Map<String,?> argListToMap();
+  public abstract Map<String, ?> argListToMap();
 }

@@ -25,6 +25,10 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.when.impl;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.jenkinsci.Symbol;
@@ -35,66 +39,60 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.when.DeclarativeStageCondi
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
-/**
- * Stage condition based on environment variable equality.
- */
+/** Stage condition based on environment variable equality. */
 public class EnvironmentConditional extends DeclarativeStageConditional<EnvironmentConditional> {
-    private final String name;
-    private final String value;
-    private boolean ignoreCase = false;
+  private final String name;
+  private final String value;
+  private boolean ignoreCase = false;
 
-    @DataBoundConstructor
-    public EnvironmentConditional(String name, String value) {
-        this.name = name;
-        this.value = value;
+  @DataBoundConstructor
+  public EnvironmentConditional(String name, String value) {
+    this.name = name;
+    this.value = value;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  public boolean isIgnoreCase() {
+    return ignoreCase;
+  }
+
+  @DataBoundSetter
+  public void setIgnoreCase(boolean ignoreCase) {
+    this.ignoreCase = ignoreCase;
+  }
+
+  public boolean environmentMatches(String v, String var) {
+    if (isEmpty(var) && isEmpty(v)) {
+      return true;
+    } else if (isEmpty(var)) {
+      return false;
+    } else if (ignoreCase) {
+      return var.equalsIgnoreCase(v);
+    } else {
+      return var.equals(v);
+    }
+  }
+
+  @Extension
+  @Symbol("environment")
+  public static class DescriptorImpl
+      extends DeclarativeStageConditionalDescriptor<EnvironmentConditional> {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Execute the stage if an environment variable exists and equals a value";
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
+      return ASTParserUtils.transformWhenContentToRuntimeAST(original);
     }
-
-    public String getValue() {
-        return value;
-    }
-
-    public boolean isIgnoreCase() {
-        return ignoreCase;
-    }
-
-    @DataBoundSetter
-    public void setIgnoreCase(boolean ignoreCase) {
-        this.ignoreCase = ignoreCase;
-    }
-
-    public boolean environmentMatches(String v, String var) {
-        if (isEmpty(var) && isEmpty(v)) {
-            return true;
-        } else if (isEmpty(var)) {
-            return false;
-        } else if (ignoreCase) {
-            return var.equalsIgnoreCase(v);
-        } else {
-            return var.equals(v);
-        }
-    }
-
-    @Extension
-    @Symbol("environment")
-    public static class DescriptorImpl extends DeclarativeStageConditionalDescriptor<EnvironmentConditional> {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Execute the stage if an environment variable exists and equals a value";
-        }
-
-        @Override
-        public Expression transformToRuntimeAST(@CheckForNull ModelASTWhenContent original) {
-            return ASTParserUtils.transformWhenContentToRuntimeAST(original);
-        }
-    }
+  }
 }

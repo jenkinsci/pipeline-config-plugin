@@ -24,37 +24,37 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.options.impl;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOption;
 import org.jenkinsci.plugins.pipeline.modeldefinition.options.DeclarativeOptionDescriptor;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 public class QuietPeriod extends DeclarativeOption {
-    private int quietPeriod;
+  private int quietPeriod;
 
-    @DataBoundConstructor
-    public QuietPeriod(int quietPeriod) {
-        this.quietPeriod = quietPeriod;
+  @DataBoundConstructor
+  public QuietPeriod(int quietPeriod) {
+    this.quietPeriod = quietPeriod;
+  }
+
+  public int getQuietPeriod() {
+    return quietPeriod;
+  }
+
+  @Extension
+  @Symbol("quietPeriod")
+  public static class DescriptorImpl extends DeclarativeOptionDescriptor {
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Set the quiet period for the job";
     }
 
-    public int getQuietPeriod() {
-        return quietPeriod;
+    @Override
+    public boolean canUseInStage() {
+      return false;
     }
-
-    @Extension @Symbol("quietPeriod")
-    public static class DescriptorImpl extends DeclarativeOptionDescriptor {
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Set the quiet period for the job";
-        }
-
-        @Override
-        public boolean canUseInStage() {
-            return false;
-        }
-    }
+  }
 }

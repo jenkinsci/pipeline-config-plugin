@@ -61,173 +61,174 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTWhenCondition;
 /**
  * Abstract implementation of {@link ModelValidator}.
  *
- * Use this class as a generic AST visitor instead of {@link ModelValidator} to prevent binary compatibility issues
- * in cases where it is fine to ignore any AST elements that were added to Declarative after you extended this class.
+ * <p>Use this class as a generic AST visitor instead of {@link ModelValidator} to prevent binary
+ * compatibility issues in cases where it is fine to ignore any AST elements that were added to
+ * Declarative after you extended this class.
  */
 public class AbstractModelValidator implements ModelValidator {
 
-    @Override
-    public boolean validateElement(ModelASTAgent agent) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTAgent agent) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTBranch branch) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTBranch branch) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTBuildConditionsContainer container) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTBuildConditionsContainer container) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTPostBuild postBuild) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTPostBuild postBuild) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTPostStage post) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTPostStage post) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTBuildCondition buildCondition) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTBuildCondition buildCondition) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTEnvironment environment) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTEnvironment environment) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTTools tools) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTTools tools) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTStep step) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTStep step) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTWhen when) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTWhen when) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTMethodCall methodCall) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTMethodCall methodCall) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTOptions properties) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTOptions properties) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTTriggers triggers) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTTriggers triggers) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTBuildParameters buildParameters) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTBuildParameters buildParameters) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTOption jobProperty) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTOption jobProperty) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTTrigger trigger) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTTrigger trigger) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTBuildParameter buildParameter) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTBuildParameter buildParameter) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTPipelineDef pipelineDef) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTPipelineDef pipelineDef) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTStageBase stage) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTStageBase stage) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTStage stage, boolean isWithinParallel) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTStage stage, boolean isWithinParallel) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTStages stages) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTStages stages) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTParallel parallel) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTParallel parallel) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTMatrix matrix) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTMatrix matrix) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTAxisContainer axes) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTAxisContainer axes) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTAxis axis) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTAxis axis) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTExcludes excludes) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTExcludes excludes) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTExclude exclude) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTExclude exclude) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTExcludeAxis axis) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTExcludeAxis axis) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTLibraries libraries) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTLibraries libraries) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTWhenCondition condition) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTWhenCondition condition) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTInternalFunctionCall call) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTInternalFunctionCall call) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTStageInput input) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTStageInput input) {
+    return true;
+  }
 
-    @Override
-    public boolean validateElement(ModelASTValue value) {
-        return true;
-    }
+  @Override
+  public boolean validateElement(ModelASTValue value) {
+    return true;
+  }
 }

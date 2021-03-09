@@ -24,6 +24,13 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.parser;
 
+import static org.codehaus.groovy.control.Phases.CONVERSION;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.net.URL;
+import java.security.CodeSource;
+import java.security.cert.Certificate;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -32,53 +39,52 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
 import org.junit.Test;
 
-import java.net.URL;
-import java.security.CodeSource;
-import java.security.cert.Certificate;
-
-import static org.codehaus.groovy.control.Phases.CONVERSION;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 public class ASTParserUtilsTest extends BaseParserLoaderTest {
-    @Test
-    public void prettyPrintTransformed() throws Exception {
-        URL src = getClass().getResource("/when/whenEnv.groovy");
+  @Test
+  public void prettyPrintTransformed() throws Exception {
+    URL src = getClass().getResource("/when/whenEnv.groovy");
 
-        // We need to do our own parsing logic here to make sure we do the runtime transformation, and so that we can
-        // capture the CompilationUnit for comparison.
-        CompilationUnit cu = new CompilationUnit(
+    // We need to do our own parsing logic here to make sure we do the runtime transformation, and
+    // so that we can
+    // capture the CompilationUnit for comparison.
+    CompilationUnit cu =
+        new CompilationUnit(
             Converter.makeCompilerConfiguration(),
             new CodeSource(src, new Certificate[0]),
             Converter.getCompilationClassLoader());
-        cu.addSource(src);
+    cu.addSource(src);
 
-        final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1];
+    final ModelASTPipelineDef[] model = new ModelASTPipelineDef[1];
 
-        cu.addPhaseOperation(new CompilationUnit.SourceUnitOperation() {
-            @Override
-            public void call(SourceUnit source) throws CompilationFailedException {
-                if (model[0] == null) {
-                    model[0] = new ModelParser(source).parse(false);
-                }
+    cu.addPhaseOperation(
+        new CompilationUnit.SourceUnitOperation() {
+          @Override
+          public void call(SourceUnit source) throws CompilationFailedException {
+            if (model[0] == null) {
+              model[0] = new ModelParser(source).parse(false);
             }
-        }, CONVERSION);
+          }
+        },
+        CONVERSION);
 
-        cu.compile(CONVERSION);
+    cu.compile(CONVERSION);
 
-        SourceUnit su = cu.iterator().next();
-        assertNotNull(su);
+    SourceUnit su = cu.iterator().next();
+    assertNotNull(su);
 
-        ModuleNode mn = su.getAST();
-        assertNotNull(mn);
+    ModuleNode mn = su.getAST();
+    assertNotNull(mn);
 
-        // Replace object ids and the like so that we've got consistent output.
-        String prettyPrint = ASTParserUtils.prettyPrint(mn)
+    // Replace object ids and the like so that we've got consistent output.
+    String prettyPrint =
+        ASTParserUtils.prettyPrint(mn)
             .replaceAll("DynamicVariable@.*", "DynamicVariable@something")
             .replaceAll("VariableExpression@.*", "VariableExpression@something")
             .replaceAll("(__model__.*?_\\d+)_\\d+__", "$1_something__")
-            .replaceAll("ConstantExpression\\[\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}", "ConstantExpression[some-uuid");
-        String expected = fileContentsFromResources("prettyPrintTransformedOutput.txt");
-        assertEquals(expected.split("\\n"), prettyPrint.split("\\n"));
-    }
+            .replaceAll(
+                "ConstantExpression\\[\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}",
+                "ConstantExpression[some-uuid");
+    String expected = fileContentsFromResources("prettyPrintTransformedOutput.txt");
+    assertEquals(expected.split("\\n"), prettyPrint.split("\\n"));
+  }
 }

@@ -22,86 +22,84 @@
  * THE SOFTWARE.
  */
 
-
 package org.jenkinsci.plugins.pipeline.modeldefinition.validator;
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.*;
 
-
 /**
  * A visitor interface that can be used to traverse the AST of a Declarative Pipeline.
  *
- * Warning: Do not implement this interface directly in non-Declarative plugins, because this interface is unstable and
- * may receive backwards-incompatible changes. Instead, use {@link AbstractModelValidator}, which will retain backwards
- * compatibility.
+ * <p>Warning: Do not implement this interface directly in non-Declarative plugins, because this
+ * interface is unstable and may receive backwards-incompatible changes. Instead, use {@link
+ * AbstractModelValidator}, which will retain backwards compatibility.
  *
  * @see AbstractModelValidator
  * @see ModelASTPipelineDef#validate
  */
 public interface ModelValidator {
-    boolean validateElement(ModelASTAgent agent);
+  boolean validateElement(ModelASTAgent agent);
 
-    boolean validateElement(ModelASTBranch branch);
+  boolean validateElement(ModelASTBranch branch);
 
-    boolean validateElement(ModelASTBuildConditionsContainer container);
+  boolean validateElement(ModelASTBuildConditionsContainer container);
 
-    boolean validateElement(ModelASTPostBuild postBuild);
+  boolean validateElement(ModelASTPostBuild postBuild);
 
-    boolean validateElement(ModelASTPostStage post);
+  boolean validateElement(ModelASTPostStage post);
 
-    boolean validateElement(ModelASTBuildCondition buildCondition);
+  boolean validateElement(ModelASTBuildCondition buildCondition);
 
-    boolean validateElement(ModelASTEnvironment environment);
+  boolean validateElement(ModelASTEnvironment environment);
 
-    boolean validateElement(ModelASTTools tools);
+  boolean validateElement(ModelASTTools tools);
 
-    boolean validateElement(ModelASTStep step);
+  boolean validateElement(ModelASTStep step);
 
-    boolean validateElement(ModelASTWhen when);
+  boolean validateElement(ModelASTWhen when);
 
-    boolean validateElement(ModelASTMethodCall methodCall);
+  boolean validateElement(ModelASTMethodCall methodCall);
 
-    boolean validateElement(ModelASTOptions properties);
+  boolean validateElement(ModelASTOptions properties);
 
-    boolean validateElement(ModelASTTriggers triggers);
+  boolean validateElement(ModelASTTriggers triggers);
 
-    boolean validateElement(ModelASTBuildParameters buildParameters);
+  boolean validateElement(ModelASTBuildParameters buildParameters);
 
-    boolean validateElement(ModelASTOption jobProperty);
+  boolean validateElement(ModelASTOption jobProperty);
 
-    boolean validateElement(ModelASTTrigger trigger);
+  boolean validateElement(ModelASTTrigger trigger);
 
-    boolean validateElement(ModelASTBuildParameter buildParameter);
+  boolean validateElement(ModelASTBuildParameter buildParameter);
 
-    boolean validateElement(ModelASTPipelineDef pipelineDef);
+  boolean validateElement(ModelASTPipelineDef pipelineDef);
 
-    boolean validateElement(ModelASTStageBase stages);
+  boolean validateElement(ModelASTStageBase stages);
 
-    boolean validateElement(ModelASTStage stage, boolean isWithinParallel);
+  boolean validateElement(ModelASTStage stage, boolean isWithinParallel);
 
-    boolean validateElement(ModelASTStages stages);
+  boolean validateElement(ModelASTStages stages);
 
-    boolean validateElement(ModelASTParallel parallel);
+  boolean validateElement(ModelASTParallel parallel);
 
-    boolean validateElement(ModelASTMatrix matrix);
+  boolean validateElement(ModelASTMatrix matrix);
 
-    boolean validateElement(ModelASTAxisContainer axes);
+  boolean validateElement(ModelASTAxisContainer axes);
 
-    boolean validateElement(ModelASTAxis axis);
+  boolean validateElement(ModelASTAxis axis);
 
-    boolean validateElement(ModelASTExcludes excludes);
+  boolean validateElement(ModelASTExcludes excludes);
 
-    boolean validateElement(ModelASTExclude exclude);
+  boolean validateElement(ModelASTExclude exclude);
 
-    boolean validateElement(ModelASTExcludeAxis axis);
+  boolean validateElement(ModelASTExcludeAxis axis);
 
-    boolean validateElement(ModelASTLibraries libraries);
+  boolean validateElement(ModelASTLibraries libraries);
 
-    boolean validateElement(ModelASTWhenCondition condition);
+  boolean validateElement(ModelASTWhenCondition condition);
 
-    boolean validateElement(ModelASTInternalFunctionCall call);
+  boolean validateElement(ModelASTInternalFunctionCall call);
 
-    boolean validateElement(ModelASTStageInput input);
+  boolean validateElement(ModelASTStageInput input);
 
-    boolean validateElement(ModelASTValue value);
+  boolean validateElement(ModelASTValue value);
 }

@@ -24,8 +24,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.generator;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.cps.Snippetizer;
 import org.kohsuke.accmod.Restricted;
@@ -33,95 +37,90 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public class LibrariesDirective extends AbstractDirective<LibrariesDirective> {
-    private final List<NameAndVersion> libs = new ArrayList<>();
+  private final List<NameAndVersion> libs = new ArrayList<>();
+
+  @DataBoundConstructor
+  public LibrariesDirective(List<NameAndVersion> libs) {
+    if (libs != null) {
+      this.libs.addAll(libs);
+    }
+  }
+
+  public List<NameAndVersion> getLibs() {
+    return libs;
+  }
+
+  @Extension
+  public static class DescriptorImpl extends DirectiveDescriptor<LibrariesDirective> {
+    @Override
+    @NonNull
+    public String getName() {
+      return "libraries";
+    }
+
+    @Override
+    @NonNull
+    public String getDisplayName() {
+      return "Shared Libraries";
+    }
+
+    @Override
+    @NonNull
+    public List<Descriptor> getDescriptors() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    @NonNull
+    public String toGroovy(@NonNull LibrariesDirective directive) {
+      StringBuilder result = new StringBuilder("libraries {\n");
+      if (!directive.getLibs().isEmpty()) {
+        for (NameAndVersion l : directive.getLibs()) {
+          result.append("lib(").append(Snippetizer.object2Groovy(l.getLibString())).append(")\n");
+        }
+      } else {
+        result.append("// No libraries specified\n");
+      }
+      result.append("}\n");
+
+      return result.toString();
+    }
+
+    public String getLibHelp(String field) {
+      return "/descriptor/" + getId() + "/help/" + field;
+    }
+  }
+
+  @Restricted(NoExternalUse.class)
+  public static final class NameAndVersion {
+    private String name;
+    private String version;
 
     @DataBoundConstructor
-    public LibrariesDirective(List<NameAndVersion> libs) {
-        if (libs != null) {
-            this.libs.addAll(libs);
-        }
+    public NameAndVersion(String name) {
+      this.name = name;
     }
 
-    public List<NameAndVersion> getLibs() {
-        return libs;
+    public String getName() {
+      return name;
     }
 
-    @Extension
-    public static class DescriptorImpl extends DirectiveDescriptor<LibrariesDirective> {
-        @Override
-        @NonNull
-        public String getName() {
-            return "libraries";
-        }
-
-        @Override
-        @NonNull
-        public String getDisplayName() {
-            return "Shared Libraries";
-        }
-
-        @Override
-        @NonNull
-        public List<Descriptor> getDescriptors() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        @NonNull
-        public String toGroovy(@NonNull LibrariesDirective directive) {
-            StringBuilder result = new StringBuilder("libraries {\n");
-            if (!directive.getLibs().isEmpty()) {
-                for (NameAndVersion l : directive.getLibs()) {
-                    result.append("lib(").append(Snippetizer.object2Groovy(l.getLibString())).append(")\n");
-                }
-            } else {
-                result.append("// No libraries specified\n");
-            }
-            result.append("}\n");
-
-            return result.toString();
-        }
-
-        public String getLibHelp(String field) {
-            return "/descriptor/" + getId() + "/help/" + field;
-        }
+    @DataBoundSetter
+    public void setVersion(String version) {
+      this.version = version;
     }
 
-    @Restricted(NoExternalUse.class)
-    public static final class NameAndVersion {
-        private String name;
-        private String version;
-
-        @DataBoundConstructor
-        public NameAndVersion(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        @DataBoundSetter
-        public void setVersion(String version) {
-            this.version = version;
-        }
-
-        public String getVersion() {
-            return version;
-        }
-
-        public String getLibString() {
-            if (StringUtils.isEmpty(version)) {
-                return name;
-            } else {
-                return name + "@" + version;
-            }
-        }
+    public String getVersion() {
+      return version;
     }
+
+    public String getLibString() {
+      if (StringUtils.isEmpty(version)) {
+        return name;
+      } else {
+        return name + "@" + version;
+      }
+    }
+  }
 }

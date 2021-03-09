@@ -23,8 +23,10 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import htmlpublisher.HtmlPublisherTarget;
-import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Slave;
@@ -37,86 +39,81 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-
-/**
- * @author Andrew Bayer
- */
+/** @author Andrew Bayer */
 public class StepsTest extends AbstractModelDefTest {
 
-    private static Slave s;
+  private static Slave s;
 
-    @BeforeClass
-    public static void setUpAgent() throws Exception {
-        s = j.createOnlineSlave();
-        s.setNumExecutors(10);
-        s.setLabelString("some-label");
+  @BeforeClass
+  public static void setUpAgent() throws Exception {
+    s = j.createOnlineSlave();
+    s.setNumExecutors(10);
+    s.setLabelString("some-label");
+  }
+
+  @Test
+  public void nestedTreeSteps() throws Exception {
+    expect("steps/nestedTreeSteps")
+        .logContains("[Pipeline] { (foo)", "[Pipeline] timeout", "[Pipeline] retry", "hello")
+        .go();
+  }
+
+  @Test
+  public void metaStepSyntax() throws Exception {
+    env(s).set();
+    expect("steps/metaStepSyntax")
+        .archives("msg.out", "hello world")
+        .archives("msg2.out", "goodbye world")
+        // Note that this test for the validator choosing a metastep over a random describable is
+        // inconsistent for
+        // the failure state - sometimes it works when it shouldn't for no obvious reason. A better
+        // test of this that
+        // will fail consistently is in pipeline-model-api's
+        // DescriptorLookupCacheTest#lookupFunctionPrefersMetaStep,
+        // but this is left here to be safe.
+        .logContains("wrapping in a 123-gon", "hi from in rhombus")
+        .go();
+  }
+
+  @Issue("JENKINS-41456")
+  @Test
+  public void htmlPublisher() throws Exception {
+    WorkflowRun b = expect("steps/htmlPublisher").logContains("[Pipeline] { (foo)").go();
+
+    HtmlPublisherTarget.HTMLBuildAction buildReport =
+        b.getAction(HtmlPublisherTarget.HTMLBuildAction.class);
+    assertNotNull(buildReport);
+    assertEquals("Test Report", buildReport.getHTMLTarget().getReportName());
+  }
+
+  public static final class FakeRhombus extends AbstractDescribableImpl<FakeRhombus> {
+    public final boolean foo;
+
+    @DataBoundConstructor
+    public FakeRhombus(boolean foo) {
+      this.foo = foo;
     }
 
-    @Test
-    public void nestedTreeSteps() throws Exception {
-        expect("steps/nestedTreeSteps")
-                .logContains("[Pipeline] { (foo)", "[Pipeline] timeout", "[Pipeline] retry", "hello")
-                .go();
+    @Symbol("rhombus")
+    @TestExtension
+    public static final class DescriptorImpl extends Descriptor<FakeRhombus> {}
+  }
+
+  public static final class Rhombus extends Curve {
+    public final int n;
+
+    @DataBoundConstructor
+    public Rhombus(int n) {
+      this.n = n;
     }
 
-    @Test
-    public void metaStepSyntax() throws Exception {
-        env(s).set();
-        expect("steps/metaStepSyntax")
-            .archives("msg.out", "hello world")
-            .archives("msg2.out", "goodbye world")
-            // Note that this test for the validator choosing a metastep over a random describable is inconsistent for
-            // the failure state - sometimes it works when it shouldn't for no obvious reason. A better test of this that
-            // will fail consistently is in pipeline-model-api's DescriptorLookupCacheTest#lookupFunctionPrefersMetaStep,
-            // but this is left here to be safe.
-            .logContains("wrapping in a 123-gon", "hi from in rhombus")
-            .go();
+    @Override
+    public String getDescription() {
+      return n + "-gon";
     }
 
-    @Issue("JENKINS-41456")
-    @Test
-    public void htmlPublisher() throws Exception {
-        WorkflowRun b = expect("steps/htmlPublisher")
-                .logContains("[Pipeline] { (foo)")
-                .go();
-
-        HtmlPublisherTarget.HTMLBuildAction buildReport = b.getAction(HtmlPublisherTarget.HTMLBuildAction.class);
-        assertNotNull(buildReport);
-        assertEquals("Test Report", buildReport.getHTMLTarget().getReportName());
-    }
-
-    public static final class FakeRhombus extends AbstractDescribableImpl<FakeRhombus> {
-        public final boolean foo;
-
-        @DataBoundConstructor
-        public FakeRhombus(boolean foo) {
-            this.foo = foo;
-        }
-
-        @Symbol("rhombus")
-        @TestExtension
-        public static final class DescriptorImpl extends Descriptor<FakeRhombus> {
-
-        }
-    }
-
-    public static final class Rhombus extends Curve {
-        public final int n;
-
-        @DataBoundConstructor public Rhombus(int n) {
-            this.n = n;
-        }
-
-        @Override public String getDescription() {
-            return n + "-gon";
-        }
-
-        @Symbol("rhombus")
-        @TestExtension
-        public static class DescriptorImpl extends Descriptor<Curve> {}
-
-    }
+    @Symbol("rhombus")
+    @TestExtension
+    public static class DescriptorImpl extends Descriptor<Curve> {}
+  }
 }

@@ -24,16 +24,12 @@
 
 package org.jenkinsci.plugins.pipeline.modeldefinition.ast;
 
-import org.jenkinsci.plugins.pipeline.modeldefinition.validator.ModelValidator;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 /**
- * Interface for elements that contain other elements.
- * Lets parents of containers get information about the child list.
+ * Interface for elements that contain other elements. Lets parents of containers get information
+ * about the child list.
  *
  * @author Liam Newman
  */
 public interface ModelASTElementContainer extends ModelASTMarkerInterface {
-    boolean isEmpty();
+  boolean isEmpty();
 }

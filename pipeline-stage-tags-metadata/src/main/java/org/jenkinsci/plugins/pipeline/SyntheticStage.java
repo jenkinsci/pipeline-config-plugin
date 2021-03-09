@@ -25,30 +25,29 @@
 package org.jenkinsci.plugins.pipeline;
 
 import hudson.Extension;
-
 import java.util.Arrays;
 import java.util.List;
 
 @Extension
 public class SyntheticStage extends StageTagsMetadata {
 
-    public static final String TAG_NAME = "SYNTHETIC_STAGE";
+  public static final String TAG_NAME = "SYNTHETIC_STAGE";
 
-    @Override
-    public String getTagName() {
-        return TAG_NAME;
-    }
+  @Override
+  public String getTagName() {
+    return TAG_NAME;
+  }
 
-    @Override
-    public List<String> getPossibleValues() {
-        return Arrays.asList(getPre(), getPost());
-    }
+  @Override
+  public List<String> getPossibleValues() {
+    return Arrays.asList(getPre(), getPost());
+  }
 
-    public static String getPre() {
-        return "PRE";
-    }
+  public static String getPre() {
+    return "PRE";
+  }
 
-    public static String getPost() {
-        return "POST";
-    }
+  public static String getPost() {
+    return "POST";
+  }
 }
