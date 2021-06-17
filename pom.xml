@@ -107,7 +107,7 @@
       <dependency>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>htmlpublisher</artifactId>
-        <version>1.12</version>
+        <version>1.25</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
