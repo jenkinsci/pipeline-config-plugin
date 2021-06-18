@@ -27,7 +27,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.credentials.impl;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import hudson.Extension;
-import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordMultiBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
@@ -37,16 +36,6 @@ import java.util.*;
 
 @Extension
 public class UsernamePasswordHandler extends CredentialsBindingHandler<StandardUsernamePasswordCredentials> {
-    @NonNull
-    @Override
-    public List<MultiBinding<StandardUsernamePasswordCredentials>> toBindings(String varName, String credentialsId) {
-        List<MultiBinding<StandardUsernamePasswordCredentials>> bindings = new ArrayList<>();
-        bindings.add(new UsernamePasswordBinding(varName, credentialsId));
-        bindings.add(new UsernamePasswordMultiBinding(varName + "_USR",
-                varName + "_PSW",
-                credentialsId));
-        return bindings;
-    }
 
     @NonNull
     @Override

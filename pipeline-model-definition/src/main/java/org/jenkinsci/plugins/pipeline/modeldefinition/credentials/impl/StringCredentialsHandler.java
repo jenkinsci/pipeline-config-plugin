@@ -26,7 +26,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.credentials.impl;
 
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import hudson.Extension;
-import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.StringBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -39,12 +38,6 @@ import java.util.Map;
 
 @Extension
 public class StringCredentialsHandler extends CredentialsBindingHandler<StringCredentials> {
-
-    @NonNull
-    @Override
-    public List<MultiBinding<StringCredentials>> toBindings(String varName, String credentialsId) {
-        return Collections.<MultiBinding<StringCredentials>>singletonList(new StringBinding(varName, credentialsId));
-    }
 
     @NonNull
     @Override

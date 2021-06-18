@@ -31,7 +31,6 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Run;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.CredentialNotFoundException;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -50,11 +49,6 @@ public abstract class CredentialsBindingHandler<C extends StandardCredentials> i
 
     public boolean handles(StandardCredentials c) {
         return handles(c.getClass());
-    }
-
-    @NonNull
-    public List<MultiBinding<C>> toBindings(String varName, String credentialsId) {
-        return Collections.emptyList();
     }
 
     @NonNull

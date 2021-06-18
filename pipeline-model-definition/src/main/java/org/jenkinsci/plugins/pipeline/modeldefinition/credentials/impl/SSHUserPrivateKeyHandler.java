@@ -3,7 +3,6 @@ package org.jenkinsci.plugins.pipeline.modeldefinition.credentials.impl;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import hudson.Extension;
-import org.jenkinsci.plugins.credentialsbinding.MultiBinding;
 import org.jenkinsci.plugins.credentialsbinding.impl.SSHUserPrivateKeyBinding;
 import org.jenkinsci.plugins.pipeline.modeldefinition.model.CredentialsBindingHandler;
 
@@ -16,15 +15,6 @@ import java.util.Map;
 @Extension
 public class SSHUserPrivateKeyHandler extends CredentialsBindingHandler<SSHUserPrivateKey> {
 
-    @NonNull
-    @Override
-    public List<MultiBinding<SSHUserPrivateKey>> toBindings(String varName, String credentialsId) {
-        SSHUserPrivateKeyBinding keyBinding = new SSHUserPrivateKeyBinding(varName, credentialsId);
-        keyBinding.setPassphraseVariable(varName + "_PSW");
-        keyBinding.setUsernameVariable(varName + "_USR");
-        return Collections.singletonList(keyBinding);
-    }
-    
     @NonNull
     @Override
     public Class<? extends StandardCredentials> type() {
