@@ -88,6 +88,7 @@ public class CredentialWrapperStepTest extends AbstractModelDefTest {
 
         String usernamePasswordCredentialsId = "FOOcredentials";
         UsernamePasswordCredentialsImpl usernamePassword = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, usernamePasswordCredentialsId, "sample", usernamePasswordUsername, usernamePasswordPassword);
+        usernamePassword.setUsernameSecret(true);
         store.addCredentials(Domain.global(), usernamePassword);
 
         StringCredentialsImpl mixedEnvCred1 = new StringCredentialsImpl(CredentialsScope.GLOBAL, mixedEnvCred1Id, "test", Secret.fromString(mixedEnvCred1Secret));

@@ -73,26 +73,15 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.190.x</artifactId>
-        <version>16</version>
+        <artifactId>bom-2.235.x</artifactId>
+        <version>841.vd6e713d848ab</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-multibranch</artifactId>
-        <version>${workflow-multibranch.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins.workflow</groupId>
-        <artifactId>workflow-multibranch</artifactId>
-        <version>${workflow-multibranch.version}</version>
-        <classifier>tests</classifier>
-      </dependency>
-      <dependency>
+      <dependency> <!-- TODO pending https://github.com/jenkinsci/bom/pull/533 -->
         <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>pipeline-stage-step</artifactId>
-        <version>2.3</version>
+        <artifactId>credentials-binding</artifactId>
+        <version>1.25</version>
       </dependency>
       <dependency>
         <groupId>org.jenkins-ci.main</groupId>
@@ -103,11 +92,6 @@
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>pipeline-graph-analysis</artifactId>
         <version>1.6</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>htmlpublisher</artifactId>
-        <version>1.12</version>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
@@ -185,11 +169,10 @@
   <properties>
     <revision>1.8.6</revision>
     <changelist>-SNAPSHOT</changelist>
-    <jenkins.version>2.190.3</jenkins.version>
+    <jenkins.version>2.235.5</jenkins.version>
     <java.level>8</java.level>
     <groovy.version>2.4.12</groovy.version>
     <argLine>-Djava.awt.headless=true -Xmx4g -Xms512m -XX:MaxPermSize=512m</argLine>
-    <workflow-multibranch.version>2.16</workflow-multibranch.version>
   </properties>
 
   <profiles>
