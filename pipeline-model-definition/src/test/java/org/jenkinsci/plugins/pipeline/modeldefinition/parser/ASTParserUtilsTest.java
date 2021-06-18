@@ -30,6 +30,8 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.SourceUnit;
 import org.jenkinsci.plugins.pipeline.modeldefinition.BaseParserLoaderTest;
 import org.jenkinsci.plugins.pipeline.modeldefinition.ast.ModelASTPipelineDef;
+import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.net.URL;
@@ -37,12 +39,17 @@ import java.security.CodeSource;
 import java.security.cert.Certificate;
 
 import static org.codehaus.groovy.control.Phases.CONVERSION;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
 
 public class ASTParserUtilsTest extends BaseParserLoaderTest {
     @Test
     public void prettyPrintTransformed() throws Exception {
+        // this test only works if script splitting is enabled
+        Assume.assumeThat(RuntimeASTTransformer.SCRIPT_SPLITTING_TRANSFORMATION, is(true));
+
         URL src = getClass().getResource("/when/whenEnv.groovy");
 
         // We need to do our own parsing logic here to make sure we do the runtime transformation, and so that we can

@@ -67,7 +67,7 @@ import static org.objectweb.asm.Opcodes.ACC_PUBLIC
  * {@link ExecutionModelAction} to the run.
  */
 @SuppressFBWarnings(value="SE_NO_SERIALVERSIONID")
-class RuntimeASTTransformer {
+public class RuntimeASTTransformer {
 
     /**
      * Enables or disables the script splitting behavior in {@Wrapper} which
