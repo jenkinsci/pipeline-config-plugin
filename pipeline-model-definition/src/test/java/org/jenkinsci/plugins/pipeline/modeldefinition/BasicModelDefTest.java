@@ -624,4 +624,14 @@ public class BasicModelDefTest extends AbstractModelDefTest {
                 .logNotContains("Executing stage B")
                 .go();
     }
+
+    @Issue("JENKINS-49135")
+    @Test
+    public void userCanTransformAST() throws Exception {
+        initGlobalLibrary();
+        expect("basic/userCanTransformAST")
+                .logContains("[Pipeline] { (foo)",
+                        "I got here by AST transformation")
+                .go();
+    }
 }

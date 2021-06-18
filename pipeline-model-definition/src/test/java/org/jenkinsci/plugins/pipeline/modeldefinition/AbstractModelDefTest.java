@@ -377,6 +377,61 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
                 "}")
                 , "\n"));
 
+        File mypkg = new File(globalLibRepo.workspace, "src/mypkg");
+        mypkg.mkdirs();
+
+        FileUtils.writeStringToFile(new File(mypkg, "AcmeAnnotation.groovy"), StringUtils.join(Arrays.asList(
+                "@org.codehaus.groovy.transform.GroovyASTTransformationClass(['mypkg.AcmeTransformation'])",
+                "@interface AcmeAnnotation {}"
+        ), "\n"));
+
+        FileUtils.writeStringToFile(new File(mypkg, "AcmeTransformation.groovy"), StringUtils.join(Arrays.asList(
+                "import org.codehaus.groovy.ast.ASTNode",
+                "import org.codehaus.groovy.ast.AnnotatedNode",
+                "import org.codehaus.groovy.ast.builder.AstBuilder",
+                "import org.codehaus.groovy.ast.expr.ArgumentListExpression",
+                "import org.codehaus.groovy.ast.expr.ClosureExpression",
+                "import org.codehaus.groovy.ast.expr.MethodCallExpression",
+                "import org.codehaus.groovy.ast.stmt.BlockStatement",
+                "import org.codehaus.groovy.ast.stmt.ExpressionStatement",
+                "import org.codehaus.groovy.ast.stmt.Statement",
+                "import org.codehaus.groovy.control.CompilePhase",
+                "import org.codehaus.groovy.control.SourceUnit",
+                "import org.codehaus.groovy.transform.ASTTransformation",
+                "import org.codehaus.groovy.transform.GroovyASTTransformation",
+                "",
+                "@GroovyASTTransformation(phase=CompilePhase.SEMANTIC_ANALYSIS)",
+                "class AcmeTransformation implements ASTTransformation {",
+                "    final AstBuilder astBuilder = new AstBuilder()",
+                "    @com.cloudbees.groovy.cps.NonCPS",
+                "    void visit(ASTNode[] nodes, SourceUnit sourceUnit) {",
+                "        def node = (AnnotatedNode) nodes[1]",
+                "        replace(node, (BlockStatement) node.getDeclaringClass().getMethods('run').get(0).getCode())",
+                "    }",
+                "    @com.cloudbees.groovy.cps.NonCPS",
+                "    void replace(AnnotatedNode node, BlockStatement block) {",
+                "        List<Statement> stmt = block.getStatements()",
+                "        for (int i=0; i<stmt.size(); ++i) {",
+                "            if (stmt.get(i) instanceof ExpressionStatement) {",
+                "                def expr = stmt.get(i).getExpression()",
+                "                if (expr == node) {",
+                "                    List<ASTNode> ast = astBuilder.buildFromString(CompilePhase.SEMANTIC_ANALYSIS,",
+                "                            $/stages { stage('foo') { steps { echo 'I got here by AST transformation' } } }/$)",
+                "                    stmt.set(i, ((BlockStatement) ast.get(0)).getStatements().get(0))",
+                "                } else if (expr instanceof MethodCallExpression) {",
+                "                    def args = (ArgumentListExpression) expr.getArguments()",
+                "                    args.getExpressions().each {",
+                "                        if (it instanceof ClosureExpression) {",
+                "                            replace(node, (BlockStatement) it.getCode())",
+                "                        }",
+                "                    }",
+                "                }",
+                "            }",
+                "        }",
+                "    }",
+                "}"
+        ), "\n"));
+
         // simulate the effect of push
         uvl.rebuild();
     }
@@ -544,7 +599,7 @@ public abstract class AbstractModelDefTest extends AbstractDeclarativeTest {
             j.waitForCompletion(run);
             // Calling `j.assertBuildStatus` directly after `j.waitForCompletion` is subject to race conditions in Pipeline jobs, so the call to `j.waitForMessage` is just here to ensure that the build is totally complete before checking the status.
             // If that race condition is fixed, the call to `j.waitForMessage` can be removed.
-            j.waitForMessage("Finished: " + result, run); // like BuildListener.finished. 
+            j.waitForMessage("Finished: " + result, run); // like BuildListener.finished.
             j.assertBuildStatus(result, run); // just double-checking
 
             if (logContains != null) {
