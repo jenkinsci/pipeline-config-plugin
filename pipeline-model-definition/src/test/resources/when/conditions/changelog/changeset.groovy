@@ -51,5 +51,13 @@ pipeline {
                 echo "With regexp"
             }
         }
+        stage("Four") {
+            when {
+                changeset pattern: '(.*\\.js|Jenkinsfile)', comparator: 'regexp', shouldMatchAll: true
+            }
+            steps {
+                echo "With shouldMatchAll"
+            }
+        }
     }
 }

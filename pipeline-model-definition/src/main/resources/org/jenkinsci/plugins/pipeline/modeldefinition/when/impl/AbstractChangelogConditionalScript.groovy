@@ -81,15 +81,20 @@ abstract class AbstractChangelogConditionalScript<S extends DeclarativeStageCond
                 }
                 return false
             }
-            return changeSets.any {def set ->
-                return set.any { def change ->
-                    return matches(change)
-                }
-            }
+            return changeSetsMatches(changeSets);
         }
         return false
     }
 
     abstract boolean matches(ChangeLogSet.Entry change)
+
+    boolean changeSetsMatches(List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets) {
+        return changeSets.any {def set ->
+            return set.any { def change ->
+                return matches(change)
+            }
+        }
+    }
+
     void initializeEval() {}
 }

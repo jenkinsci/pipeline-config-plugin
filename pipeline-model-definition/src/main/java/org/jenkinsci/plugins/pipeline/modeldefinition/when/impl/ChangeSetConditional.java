@@ -55,12 +55,14 @@ public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetC
     private transient String glob;
     private String pattern;
     private boolean caseSensitive;
+    private boolean shouldMatchAll;
     private String comparator;
 
     @DataBoundConstructor
     public ChangeSetConditional(String pattern) {
         this.pattern = pattern;
         this.caseSensitive = false;
+        this.shouldMatchAll = false;
     }
 
     @Deprecated
@@ -70,6 +72,10 @@ public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetC
 
     public boolean isCaseSensitive() {
         return caseSensitive;
+    }
+
+    public boolean isShouldMatchAll() {
+        return shouldMatchAll;
     }
 
     public String getPattern() {
@@ -107,10 +113,23 @@ public class ChangeSetConditional extends DeclarativeStageConditional<ChangeSetC
         this.caseSensitive = caseSensitive;
     }
 
-    public boolean changeSetMatches(ChangeLogSet.Entry change, String pattern, boolean caseSensitive) {
-        Comparator c = Comparator.get(comparator, Comparator.GLOB);
+    @DataBoundSetter
+    public void setShouldMatchAll(boolean shouldMatchAll) {
+        this.shouldMatchAll = shouldMatchAll;
+    }
 
-        return change.getAffectedPaths().stream().anyMatch(path -> c.compare(pattern, path, caseSensitive));
+    public boolean changeSetMatches(ChangeLogSet.Entry change, String pattern, boolean caseSensitive, boolean shouldMatchAll) {
+        Comparator c = Comparator.get(comparator, Comparator.GLOB);
+        if (shouldMatchAll) {
+            return change.getAffectedPaths().stream().allMatch(path -> c.compare(pattern, path, caseSensitive));
+        } else {
+            return change.getAffectedPaths().stream().anyMatch(path -> c.compare(pattern, path, caseSensitive));
+        }
+    }
+
+    @Deprecated
+    public boolean changeSetMatches(ChangeLogSet.Entry change, String pattern, boolean caseSensitive) {
+        return changeSetMatches(change, pattern, caseSensitive, this.isShouldMatchAll());
     }
 
     @Extension

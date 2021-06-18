@@ -61,6 +61,48 @@
           "value": ".*\\.js"
         }
       }]}
+    },
+    {
+      "name": "Four",
+      "branches": [      {
+        "name": "default",
+        "steps": [        {
+          "name": "echo",
+          "arguments": [          {
+            "key": "message",
+            "value":             {
+              "isLiteral": true,
+              "value": "With shouldMatchAll"
+            }
+          }]
+        }]
+      }],
+      "when": {"conditions": [      {
+        "name": "changeset",
+        "arguments":         [
+          {
+            "key": "pattern",
+            "value":             {
+              "isLiteral": true,
+              "value": "(.*\\.js|Jenkinsfile)"
+            }
+          },
+          {
+            "key": "comparator",
+            "value":             {
+              "isLiteral": true,
+              "value": "regexp"
+            }
+          },
+          {
+            "key": "shouldMatchAll",
+            "value":             {
+              "isLiteral": true,
+              "value": "true"
+            }
+          }
+        ]
+      }]}
     }
   ],
   "agent":   {

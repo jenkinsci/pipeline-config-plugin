@@ -36,7 +36,20 @@ class ChangeSetConditionalScript extends AbstractChangelogConditionalScript<Chan
     }
 
     @Override
+    boolean changeSetsMatches(List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets) {
+        if (describable.shouldMatchAll) {
+            return changeSets.every { def set ->
+                return set.every { def change ->
+                    return matches(change)
+                }
+            }
+        } else {
+            super.changeSetsMatches(changeSets);
+        }
+    }
+
+    @Override
     boolean matches(ChangeLogSet.Entry change) {
-        return describable.changeSetMatches(change, describable.pattern, describable.caseSensitive)
+        return describable.changeSetMatches(change, describable.pattern, describable.caseSensitive, describable.shouldMatchAll)
     }
 }

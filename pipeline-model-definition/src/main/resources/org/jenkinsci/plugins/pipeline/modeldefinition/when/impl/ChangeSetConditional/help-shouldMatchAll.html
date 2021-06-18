@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ The MIT License
   ~
-  ~ Copyright (c) 2018, CloudBees, Inc.
+  ~ Copyright (c) 2019, Elasticsearch B.V.
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -23,20 +22,6 @@
   ~ THE SOFTWARE.
   -->
 
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry field="pattern" title="File/path pattern to match against changeset">
-        <f:textbox/>
-    </f:entry>
-    <f:entry field="caseSensitive">
-        <f:checkbox title="Case-sensitive path/file matching only for the GLOB comparator" checked="false"/>
-    </f:entry>
-    <f:advanced>
-        <f:entry field="comparator" title="Comparator">
-            <f:select/>
-        </f:entry>
-        <f:entry field="shouldMatchAll">
-            <f:checkbox title="whether all the elements in the changeset should match with the given pattern" checked="false"/>
-        </f:entry>
-    </f:advanced>
-</j:jelly>
+<p>
+    If true, the comparison should match all the elements in the changeset. Defaults to false.
+</p>
