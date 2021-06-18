@@ -286,5 +286,6 @@
 
   <properties>
     <no-test-jar>false</no-test-jar>
+    <useBeta>true</useBeta>
   </properties>
 </project>
