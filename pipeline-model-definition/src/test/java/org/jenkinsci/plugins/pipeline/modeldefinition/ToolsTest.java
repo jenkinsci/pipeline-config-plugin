@@ -23,7 +23,6 @@
  */
 package org.jenkinsci.plugins.pipeline.modeldefinition;
 
-import hudson.model.JDK;
 import hudson.model.Slave;
 import hudson.tasks.Maven;
 import org.jenkinsci.plugins.pipeline.modeldefinition.parser.RuntimeASTTransformer;
@@ -33,7 +32,6 @@ import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.ToolInstallations;
 
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Andrew Bayer
@@ -96,26 +94,6 @@ public class ToolsTest extends AbstractModelDefTest {
                 .logContains("Solo: Apache Maven 3.0.1",
                         "First in group: Apache Maven 3.5.0",
                         "Second in group: Apache Maven 3.0.1")
-                .go();
-    }
-
-    @Test
-    public void buildPluginParentPOM() throws Exception {
-        Maven.MavenInstallation maven350 = ToolInstallations.configureMaven35();
-        JDK[] jdks = j.jenkins.getDescriptorByType(JDK.DescriptorImpl.class).getInstallations();
-        JDK thisJdk = null;
-        for (JDK j : jdks) {
-            if (j.getName().equals("default")) {
-                thisJdk = j;
-            }
-        }
-        assertNotNull("Couldn't find JDK named 'default'", thisJdk);
-
-        expect("buildPluginParentPOM")
-                .logContains("[Pipeline] { (build)",
-                        "BUILD SUCCESS",
-                        "M2_HOME: " + maven350.getHome(),
-                        "JAVA_HOME: " + thisJdk.getHome())
                 .go();
     }
 
